@@ -1,0 +1,194 @@
+use rand::seq::SliceRandom;
+use rand::thread_rng;
+use std::collections::HashSet;
+use std::hash::Hash;
+use std::fmt::Debug;
+
+const LOWER_BOUND_RATIO: f32 = 1.0 / 6.0;
+const UPPER_BOUND_RATIO: f32 = 1.0 / 4.0;
+const TARGET_RATIO: f32 = 1.0 / 5.0;
+
+/// Generates a single N-Back sequence with a controlled number of matches.
+fn generate_single_nback_sequence<T>(
+    n: usize,
+    length: usize,
+    stimulus_set: &[T],
+    forbidden_match_indices: &HashSet<usize>,
+) -> Vec<T>
+where
+    T: Clone + Eq + Hash + Debug,
+{
+    if length < 20 {
+        // Fallback to simple random for very short sequences where the ratio logic may fail or be slow.
+        return generate_simple_random_sequence(n, length, stimulus_set);
+    }
+
+    let mut rng = thread_rng();
+
+    loop {
+        // Step 1: Plan match positions
+        let num_target_matches = ((length - n) as f32 * TARGET_RATIO).ceil() as usize;
+
+        let all_possible_slots: Vec<usize> = (n..length).collect();
+        let mut non_overlapping_slots: Vec<&usize> = all_possible_slots
+            .iter()
+            .filter(|p| !forbidden_match_indices.contains(p))
+            .collect();
+        let mut overlapping_slots: Vec<&usize> = all_possible_slots
+            .iter()
+            .filter(|p| forbidden_match_indices.contains(p))
+            .collect();
+
+        non_overlapping_slots.shuffle(&mut rng);
+        overlapping_slots.shuffle(&mut rng);
+
+        let mut match_indices = HashSet::new();
+        match_indices.extend(non_overlapping_slots.iter().take(num_target_matches).map(|&&i| i));
+
+        let remaining_needed = num_target_matches.saturating_sub(match_indices.len());
+        if remaining_needed > 0 {
+            match_indices.extend(overlapping_slots.iter().take(remaining_needed).map(|&&i| i));
+        }
+
+        // Step 2: Build the sequence
+        let mut sequence = Vec::with_capacity(length);
+        for i in 0..length {
+            if i < n {
+                sequence.push(stimulus_set.choose(&mut rng).unwrap().clone());
+                continue;
+            }
+
+            let previous_stimulus = &sequence[i - n];
+            if match_indices.contains(&i) {
+                sequence.push(previous_stimulus.clone());
+            } else {
+                let mut new_stimulus = stimulus_set.choose(&mut rng).unwrap();
+                while new_stimulus == previous_stimulus {
+                    new_stimulus = stimulus_set.choose(&mut rng).unwrap();
+                }
+                sequence.push(new_stimulus.clone());
+            }
+        }
+
+        // Step 3: Validate
+        let actual_matches = (n..length).filter(|&i| sequence[i] == sequence[i - n]).count();
+        let actual_ratio = actual_matches as f32 / length as f32;
+
+        if (LOWER_BOUND_RATIO..=UPPER_BOUND_RATIO).contains(&actual_ratio) {
+            return sequence;
+        }
+    }
+}
+
+/// Fallback for short sequences. This version is "simple" because it doesn't control
+/// the match ratio, but it *does* use `n` to prevent any accidental matches.
+fn generate_simple_random_sequence<T>(n: usize, length: usize, stimulus_set: &[T]) -> Vec<T>
+where
+    T: Clone + Eq,
+{
+    let mut rng = thread_rng();
+    let mut sequence = Vec::with_capacity(length);
+    for i in 0..length {
+        if i < n {
+            sequence.push(stimulus_set.choose(&mut rng).unwrap().clone());
+        } else {
+            let previous_stimulus = &sequence[i - n];
+            let mut new_stimulus = stimulus_set.choose(&mut rng).unwrap();
+            // Ensure we don't create an accidental match
+            while new_stimulus == previous_stimulus {
+                new_stimulus = stimulus_set.choose(&mut rng).unwrap();
+            }
+            sequence.push(new_stimulus.clone());
+        }
+    }
+    sequence
+}
+
+
+/// Generates both audio and visual sequences for a Dual N-Back task.
+pub fn generate_dual_nback_sequences(
+    n: usize,
+    length: usize,
+    grid_size: u8,
+) -> (Vec<char>, Vec<u8>) {
+    if n >= length {
+        panic!("N-value must be less than the sequence length.");
+    }
+
+    const AUDITORY_STIMULI: &[char] = &[
+        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
+    ];
+    let visual_stimuli: Vec<u8> = (0..(grid_size as u16 * grid_size as u16) as u8).collect();
+
+    // 1. Generate audio sequence
+    let audio_sequence =
+        generate_single_nback_sequence(n, length, AUDITORY_STIMULI, &HashSet::new());
+
+    // 2. Find audio match indices
+    let audio_match_indices: HashSet<usize> = (n..length)
+        .filter(|&i| audio_sequence[i] == audio_sequence[i - n])
+        .collect();
+
+    // 3. Generate visual sequence, avoiding audio match indices
+    let visual_sequence =
+        generate_single_nback_sequence(n, length, &visual_stimuli, &audio_match_indices);
+
+    (audio_sequence, visual_sequence)
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_single_sequence_generation_ratio() {
+        let n = 2;
+        let length = 50;
+        let stimulus_set: Vec<u8> = (0..9).collect();
+        let sequence = generate_single_nback_sequence(n, length, &stimulus_set, &HashSet::new());
+
+        assert_eq!(sequence.len(), length);
+
+        let matches = (n..length).filter(|&i| sequence[i] == sequence[i - n]).count();
+        let ratio = matches as f32 / length as f32;
+
+        println!("Generated sequence with match ratio: {}", ratio);
+        assert!(ratio >= LOWER_BOUND_RATIO, "Ratio should be >= {}", LOWER_BOUND_RATIO);
+        assert!(ratio <= UPPER_BOUND_RATIO, "Ratio should be <= {}", UPPER_BOUND_RATIO);
+    }
+
+    #[test]
+    fn test_dual_sequence_generation() {
+        let n = 3;
+        let length = 100;
+        let (audio_seq, visual_seq) = generate_dual_nback_sequences(n, length, 3);
+
+        assert_eq!(audio_seq.len(), length);
+        assert_eq!(visual_seq.len(), length);
+
+        // It's not a hard guarantee, but we can check that the overlap is low.
+        let audio_match_indices: HashSet<usize> = (n..length)
+            .filter(|&i| audio_seq[i] == audio_seq[i - n])
+            .collect();
+        let visual_match_indices: HashSet<usize> = (n..length)
+            .filter(|&i| visual_seq[i] == visual_seq[i - n])
+            .collect();
+        
+        let overlap = audio_match_indices.intersection(&visual_match_indices).count();
+        println!("Dual sequence generated with {} overlapping matches.", overlap);
+        // This is a soft test; in rare cases, overlap might be high, but it should be low on average.
+        assert!(overlap < 10, "Overlap should be minimal"); // Increased tolerance for randomness
+    }
+
+    #[test]
+    fn test_simple_generator_avoids_matches() {
+        let n = 1;
+        let length = 15; // < 20 to trigger the simple generator
+        let stimulus_set: Vec<u8> = (0..3).collect(); // Small set to increase chance of random match
+        let sequence = generate_single_nback_sequence(n, length, &stimulus_set, &HashSet::new());
+
+        let matches = (n..length).filter(|&i| sequence[i] == sequence[i - n]).count();
+        assert_eq!(matches, 0, "Simple generator should not create n-back matches");
+    }
+}

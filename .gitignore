@@ -1,0 +1,28 @@
+# Rust
+/src-tauri/target
+/src-tauri/Cargo.lock
+
+# Node
+node_modules
+dist
+.npm
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Tauri
+/src-tauri/gen
+
+# IDEs
+.idea
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS
+.DS_Store
+Thumbs.db
