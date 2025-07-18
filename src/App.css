@@ -1,10 +1,22 @@
 /* Global Styles */
 :root {
+  /* Dark Theme (Default) */
   --background-color: #1a1b26;
   --sidebar-color: #24283b;
   --text-color: #c0caf5;
   --hover-color: #414868;
   --accent-color: #7aa2f7;
+  --card-border-color: var(--hover-color);
+}
+
+.light-theme {
+  /* Light Theme */
+  --background-color: #f2f2f2;
+  --sidebar-color: #ffffff;
+  --text-color: #2d3748;
+  --hover-color: #e2e8f0;
+  --accent-color: #4299e1;
+  --card-border-color: #e2e8f0;
 }
 
 body {
@@ -81,6 +93,14 @@ body {
   flex-grow: 1;
   padding: 2rem;
   overflow-y: auto;
+}
+
+/* Global Page Title */
+.page-title {
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 2rem;
+  font-weight: bold;
 }
 
 /* Responsive Design */

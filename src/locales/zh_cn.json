@@ -1,0 +1,22 @@
+{
+  "settings": {
+    "title": "设置",
+    "nLevel": "N-Level",
+    "speed": "速度 (ms)",
+    "gridSize": "网格大小",
+    "sessionLength": "会话长度",
+    "visualFeedback": "视觉反馈",
+    "dataManagement": "数据管理",
+    "exportData": "导出数据",
+    "save": "保存设置",
+    "language": "语言"
+  },
+  "history": {
+    "title": "历史与进度",
+    "progressChart": "进度图表",
+    "sessionHistory": "会话历史"
+  },
+  "game": {
+    "title": "Dual N-Back"
+  }
+}

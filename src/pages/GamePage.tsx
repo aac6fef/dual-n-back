@@ -53,7 +53,7 @@ const GamePage: React.FC = () => {
 
   return (
     <div style={{ textAlign: 'center' }}>
-      <h1>Dual N-Back</h1>
+      <h1 className="page-title">Dual N-Back</h1>
       <GameStatus
         nLevel={nLevel}
         turn={turn}

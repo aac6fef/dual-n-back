@@ -1,0 +1,111 @@
+.settings-container {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.settings-card {
+  margin-bottom: 1.5rem;
+}
+
+.card-title {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  font-size: 1.25rem;
+  border-bottom: 1px solid var(--hover-color);
+  padding-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.save-button-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.75rem;
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--hover-color);
+  margin: 2rem 0;
+}
+
+.error-message {
+  color: #ff5555;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+/* Custom Slider Styles */
+.slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 8px;
+  background: var(--background-color);
+  border-radius: 5px;
+  outline: none;
+  border: 1px solid var(--hover-color);
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: var(--accent-color);
+  cursor: pointer;
+  border-radius: 50%;
+  border: 2px solid var(--sidebar-color);
+}
+
+.slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: var(--accent-color);
+  cursor: pointer;
+  border-radius: 50%;
+  border: 2px solid var(--sidebar-color);
+}
+
+.slider.invalid::-webkit-slider-thumb {
+  background: #ff5555;
+}
+
+.slider.invalid::-moz-range-thumb {
+  background: #ff5555;
+}
+
+.select-input {
+  width: 100%;
+  background-color: var(--background-color);
+  border: 1px solid var(--hover-color);
+  border-radius: 8px;
+  padding: 0.8rem 1rem;
+  color: var(--text-color);
+  font-size: 1rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  -webkit-appearance: none;
+  appearance: none;
+  background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23c0caf5%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E');
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 0.65em auto;
+}
+
+.select-input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px rgba(122, 162, 247, 0.5);
+}

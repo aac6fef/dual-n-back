@@ -1,0 +1,22 @@
+{
+  "settings": {
+    "title": "Settings",
+    "nLevel": "N-Level",
+    "speed": "Speed (ms)",
+    "gridSize": "Grid Size",
+    "sessionLength": "Session Length",
+    "visualFeedback": "Visual Feedback",
+    "dataManagement": "Data Management",
+    "exportData": "Export Data",
+    "save": "Save Settings",
+    "language": "Language"
+  },
+  "history": {
+    "title": "History & Progress",
+    "progressChart": "Progress Chart",
+    "sessionHistory": "Session History"
+  },
+  "game": {
+    "title": "Dual N-Back"
+  }
+}
