@@ -1,0 +1,25 @@
+.grid-container {
+  display: grid;
+  gap: 10px;
+  width: 300px;
+  height: 300px;
+  max-width: 80vw;
+  max-height: 80vw;
+  aspect-ratio: 1 / 1;
+  margin: 2rem auto;
+  padding: 10px;
+  background-color: var(--background-color);
+  border: 2px solid var(--hover-color);
+  border-radius: 10px;
+}
+
+.grid-cell {
+  background-color: var(--sidebar-color);
+  border-radius: 8px;
+  transition: background-color 0.1s ease-in-out;
+}
+
+.grid-cell.active {
+  background-color: var(--accent-color);
+  box-shadow: 0 0 15px var(--accent-color);
+}

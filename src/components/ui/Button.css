@@ -1,0 +1,49 @@
+.btn {
+  padding: 0.8rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.1s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  white-space: nowrap;
+  gap: 0.5rem;
+}
+
+.btn .btn-icon {
+  margin: 0;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Primary Button */
+.btn-primary {
+  background-color: var(--accent-color);
+  color: var(--background-color);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #9eceff;
+}
+
+/* Secondary Button */
+.btn-secondary {
+  background-color: var(--hover-color);
+  color: var(--text-color);
+  border: 1px solid var(--hover-color);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: #565f89;
+}

@@ -1,50 +1,65 @@
-import { useState } from "react";
-import reactLogo from "./assets/react.svg";
-import { invoke } from "@tauri-apps/api/core";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  NavLink,
+  Outlet,
+} from "react-router-dom";
+import { Home, Settings, History } from "lucide-react";
 import "./App.css";
+import GamePage from "./pages/GamePage";
+import SettingsPage from "./pages/SettingsPage";
+import HistoryPage from "./pages/HistoryPage";
 
-function App() {
-  const [greetMsg, setGreetMsg] = useState("");
-  const [name, setName] = useState("");
-
-  async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
-  }
+const Layout = () => {
+  const getLinkClass = ({ isActive }: { isActive: boolean }) =>
+    isActive ? "active" : "";
 
   return (
-    <main className="container">
-      <h1>Welcome to Tauri + React</h1>
+    <div className="app-container">
+      <nav className="sidebar">
+        <div className="sidebar-header">
+          <h2>N-Back</h2>
+        </div>
+        <ul className="nav-links">
+          <li>
+            <NavLink to="/" className={getLinkClass}>
+              <Home size={20} />
+              <span>Game</span>
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/settings" className={getLinkClass}>
+              <Settings size={20} />
+              <span>Settings</span>
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/history" className={getLinkClass}>
+              <History size={20} />
+              <span>History</span>
+            </NavLink>
+          </li>
+        </ul>
+      </nav>
+      <main className="content">
+        <Outlet />
+      </main>
+    </div>
+  );
+};
 
-      <div className="row">
-        <a href="https://vite.dev" target="_blank">
-          <img src="/vite.svg" className="logo vite" alt="Vite logo" />
-        </a>
-        <a href="https://tauri.app" target="_blank">
-          <img src="/tauri.svg" className="logo tauri" alt="Tauri logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <p>Click on the Tauri, Vite, and React logos to learn more.</p>
-
-      <form
-        className="row"
-        onSubmit={(e) => {
-          e.preventDefault();
-          greet();
-        }}
-      >
-        <input
-          id="greet-input"
-          onChange={(e) => setName(e.currentTarget.value)}
-          placeholder="Enter a name..."
-        />
-        <button type="submit">Greet</button>
-      </form>
-      <p>{greetMsg}</p>
-    </main>
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Layout />}>
+          <Route index element={<GamePage />} />
+          <Route path="settings" element={<SettingsPage />} />
+          <Route path="history" element={<HistoryPage />} />
+        </Route>
+      </Routes>
+    </BrowserRouter>
   );
 }
 
