@@ -1,22 +1,45 @@
 {
   "settings": {
     "title": "设置",
-    "nLevel": "N-Level",
-    "speed": "速度 (ms)",
-    "gridSize": "网格大小",
-    "sessionLength": "会话长度",
-    "visualFeedback": "视觉反馈",
-    "dataManagement": "数据管理",
-    "exportData": "导出数据",
-    "save": "保存设置",
-    "language": "语言"
+    "loading": "正在加载设置...",
+    "coreTraining": {
+      "title": "核心训练",
+      "nLevel": "N-Level: {{level}}",
+      "speed": "速度 (ms): {{speed}}",
+      "gridSize": "网格尺寸: {{size}}x{{size}}",
+      "sessionLength": "会话长度: {{length}}",
+      "sessionLengthError": "对于 N-Level {{nLevel}}，会话长度必须至少为 {{minLength}}。"
+    },
+    "interface": {
+      "title": "界面",
+      "visualFeedback": "视觉反馈",
+      "lightTheme": "浅色主题",
+      "language": "语言"
+    },
+    "dataManagement": {
+      "title": "数据管理",
+      "export": "导出数据"
+    },
+    "saveButton": "保存设置"
   },
   "history": {
     "title": "历史与进度",
+    "loading": "正在加载历史记录...",
+    "noHistory": "暂无历史记录。开始一局游戏来查看你的进度！",
     "progressChart": "进度图表",
-    "sessionHistory": "会话历史"
+    "difficultySettings": "难度设置",
+    "sessionHistory": "会话历史",
+    "visualAccuracy": "视觉准确率",
+    "audioAccuracy": "听觉准确率",
+    "nLevel": "N-Level",
+    "sessionLength": "会话长度",
+    "speed": "速度"
   },
   "game": {
-    "title": "Dual N-Back"
+    "title": "Dual N-Back",
+    "startGame": "开始游戏",
+    "gameOver": "游戏结束",
+    "finalVisualAccuracy": "最终视觉准确率: {{accuracy}}%",
+    "finalAudioAccuracy": "最终听觉准确率: {{accuracy}}%"
   }
 }

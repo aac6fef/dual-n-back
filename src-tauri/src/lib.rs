@@ -6,7 +6,26 @@ use game::{AppState, GameState, UserInput};
 use persistence::{
     DbState, GameSession, UserSettings, load_all_sessions, load_settings, save_session, save_settings,
 };
+use serde::Serialize;
 use tauri::{Manager, State};
+
+// --- CSV Export Struct ---
+#[derive(Serialize)]
+struct CsvRecord {
+    timestamp: String,
+    n_level: usize,
+    speed_ms: u64,
+    session_length: usize,
+    grid_size: u8,
+    visual_true_positives: u32,
+    visual_true_negatives: u32,
+    visual_false_positives: u32,
+    visual_false_negatives: u32,
+    audio_true_positives: u32,
+    audio_true_negatives: u32,
+    audio_false_positives: u32,
+    audio_false_negatives: u32,
+}
 
 // --- Settings Commands ---
 #[tauri::command]
@@ -30,6 +49,37 @@ fn get_game_history(db_state: State<DbState>) -> Result<Vec<GameSession>, String
     let db = db_state.0.lock().unwrap();
     load_all_sessions(&db).map_err(|e| e.to_string())
 }
+
+#[tauri::command]
+fn export_history_as_csv(db_state: State<DbState>) -> Result<String, String> {
+    let db = db_state.0.lock().unwrap();
+    let sessions = load_all_sessions(&db).map_err(|e| e.to_string())?;
+
+    let records: Vec<CsvRecord> = sessions.into_iter().map(|s| CsvRecord {
+        timestamp: s.timestamp.to_rfc3339(),
+        n_level: s.settings.n_level,
+        speed_ms: s.settings.speed_ms,
+        session_length: s.settings.session_length,
+        grid_size: s.settings.grid_size,
+        visual_true_positives: s.visual_stats.true_positives,
+        visual_true_negatives: s.visual_stats.true_negatives,
+        visual_false_positives: s.visual_stats.false_positives,
+        visual_false_negatives: s.visual_stats.false_negatives,
+        audio_true_positives: s.audio_stats.true_positives,
+        audio_true_negatives: s.audio_stats.true_negatives,
+        audio_false_positives: s.audio_stats.false_positives,
+        audio_false_negatives: s.audio_stats.false_negatives,
+    }).collect();
+
+    let mut wtr = csv::Writer::from_writer(vec![]);
+    for record in records {
+        wtr.serialize(record).map_err(|e| e.to_string())?;
+    }
+
+    let csv_string = String::from_utf8(wtr.into_inner().map_err(|e| e.to_string())?).map_err(|e| e.to_string())?;
+    Ok(csv_string)
+}
+
 
 // --- Game Logic Commands ---
 #[tauri::command]
@@ -107,6 +157,7 @@ pub fn run() {
             
             Ok(())
         })
+        .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
             start_game,
@@ -114,7 +165,8 @@ pub fn run() {
             get_game_state,
             load_user_settings,
             save_user_settings,
-            get_game_history
+            get_game_history,
+            export_history_as_csv
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

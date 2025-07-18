@@ -1,22 +1,45 @@
 {
   "settings": {
     "title": "Settings",
-    "nLevel": "N-Level",
-    "speed": "Speed (ms)",
-    "gridSize": "Grid Size",
-    "sessionLength": "Session Length",
-    "visualFeedback": "Visual Feedback",
-    "dataManagement": "Data Management",
-    "exportData": "Export Data",
-    "save": "Save Settings",
-    "language": "Language"
+    "loading": "Loading Settings...",
+    "coreTraining": {
+      "title": "Core Training",
+      "nLevel": "N-Level: {{level}}",
+      "speed": "Speed (ms): {{speed}}",
+      "gridSize": "Grid Size: {{size}}x{{size}}",
+      "sessionLength": "Session Length: {{length}}",
+      "sessionLengthError": "Session length must be at least {{minLength}} for N-Level {{nLevel}}."
+    },
+    "interface": {
+      "title": "Interface",
+      "visualFeedback": "Visual Feedback",
+      "lightTheme": "Light Theme",
+      "language": "Language"
+    },
+    "dataManagement": {
+      "title": "Data Management",
+      "export": "Export Data"
+    },
+    "saveButton": "Save Settings"
   },
   "history": {
     "title": "History & Progress",
+    "loading": "Loading History...",
+    "noHistory": "No history yet. Play a game to see your progress!",
     "progressChart": "Progress Chart",
-    "sessionHistory": "Session History"
+    "difficultySettings": "Difficulty Settings",
+    "sessionHistory": "Session History",
+    "visualAccuracy": "Visual Accuracy",
+    "audioAccuracy": "Audio Accuracy",
+    "nLevel": "N-Level",
+    "sessionLength": "Session Length",
+    "speed": "Speed"
   },
   "game": {
-    "title": "Dual N-Back"
+    "title": "Dual N-Back",
+    "startGame": "Start Game",
+    "gameOver": "Game Over",
+    "finalVisualAccuracy": "Final Visual Accuracy: {{accuracy}}%",
+    "finalAudioAccuracy": "Final Audio Accuracy: {{accuracy}}%"
   }
 }

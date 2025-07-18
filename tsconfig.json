@@ -14,6 +14,8 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
+    "types": ["@tauri-apps/api"],
+
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,

@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import { invoke } from '@tauri-apps/api/core';
 import {
   LineChart,
   ComposedChart,
@@ -17,36 +19,103 @@ import { BarChart3, History as HistoryIcon, Sliders, ChevronRight } from 'lucide
 import Card from '../components/ui/Card';
 import './HistoryPage.css';
 
-// Mock data for demonstration
-const mockHistory = [
-  { date: '2025-07-18', nLevel: 2, speed: 2000, sessionLength: 25, visualAcc: 85.2, audioAcc: 88.0 },
-  { date: '2025-07-17', nLevel: 2, speed: 2000, sessionLength: 20, visualAcc: 82.1, audioAcc: 85.5 },
-  { date: '2025-07-16', nLevel: 2, speed: 2500, sessionLength: 20, visualAcc: 78.0, audioAcc: 80.0 },
-  { date: '2025-07-15', nLevel: 1, speed: 2500, sessionLength: 20, visualAcc: 95.5, audioAcc: 98.0 },
-  { date: '2025-07-14', nLevel: 1, speed: 3000, sessionLength: 20, visualAcc: 92.3, audioAcc: 94.5 },
-  { date: '2025-07-13', nLevel: 1, speed: 3000, sessionLength: 20, visualAcc: 90.0, audioAcc: 91.0 },
-].reverse(); // Reverse to show oldest first in the chart
+// --- Data Structures mirroring Rust backend ---
+interface AccuracyStats {
+  true_positives: number;
+  true_negatives: number;
+  false_positives: number;
+  false_negatives: number;
+}
+
+interface UserSettings {
+  n_level: number;
+  speed_ms: number;
+  grid_size: number;
+  session_length: number;
+}
+
+interface GameSession {
+  id: string;
+  timestamp: string; // ISO 8601 string
+  settings: UserSettings;
+  visual_stats: AccuracyStats;
+  audio_stats: AccuracyStats;
+}
+
+// --- Helper Functions ---
+const calculateAccuracy = (stats: AccuracyStats): number => {
+  const total = stats.true_positives + stats.true_negatives + stats.false_positives + stats.false_negatives;
+  if (total === 0) return 0;
+  const correct = stats.true_positives + stats.true_negatives;
+  return (correct / total) * 100;
+};
+
+const transformHistoryData = (sessions: GameSession[]) => {
+  return sessions.map(session => ({
+    date: new Date(session.timestamp).toLocaleDateString(),
+    nLevel: session.settings.n_level,
+    speed: session.settings.speed_ms,
+    sessionLength: session.settings.session_length,
+    visualAcc: calculateAccuracy(session.visual_stats),
+    audioAcc: calculateAccuracy(session.audio_stats),
+  }));
+};
 
 const HistoryPage: React.FC = () => {
-  // Find points where N-Level changes to draw reference lines
-  const nLevelChangePoints = mockHistory.reduce((acc, session, index, arr) => {
+  const { t } = useTranslation();
+  const [history, setHistory] = useState<GameSession[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchHistory = async () => {
+      setIsLoading(true);
+      try {
+        const fetchedHistory = await invoke<GameSession[]>('get_game_history');
+        // Sort by timestamp ascending for chart
+        fetchedHistory.sort((a: GameSession, b: GameSession) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+        setHistory(fetchedHistory);
+      } catch (error) {
+        console.error("Failed to fetch game history:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchHistory();
+  }, []);
+
+  const chartData = transformHistoryData(history);
+
+  const nLevelChangePoints = chartData.reduce((acc, session, index, arr) => {
     if (index > 0 && session.nLevel !== arr[index - 1].nLevel) {
       acc.push({ x: session.date, nLevel: session.nLevel });
     }
     return acc;
   }, [] as { x: string; nLevel: number }[]);
 
+  if (isLoading) {
+    return <div className="history-container"><h1 className="page-title">{t('history.loading')}</h1></div>;
+  }
+
+  if (history.length === 0) {
+    return (
+      <div className="history-container">
+        <h1 className="page-title">{t('history.title')}</h1>
+        <p>{t('history.noHistory')}</p>
+      </div>
+    );
+  }
+
   return (
     <div className="history-container">
-      <h1 className="page-title">History & Progress</h1>
+      <h1 className="page-title">{t('history.title')}</h1>
 
       <h2 className="page-subtitle">
         <BarChart3 size={22} />
-        Progress Chart
+        {t('history.progressChart')}
       </h2>
       <Card className="chart-card">
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={mockHistory}>
+          <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--hover-color)" />
             <XAxis dataKey="date" stroke="var(--text-color)" />
             <YAxis stroke="var(--text-color)" domain={[50, 100]} />
@@ -70,7 +139,7 @@ const HistoryPage: React.FC = () => {
             <Line
               type="monotone"
               dataKey="visualAcc"
-              name="Visual Accuracy"
+              name={t('history.visualAccuracy')}
               stroke="#8884d8"
               strokeWidth={2}
               activeDot={{ r: 8 }}
@@ -79,7 +148,7 @@ const HistoryPage: React.FC = () => {
             <Line
               type="monotone"
               dataKey="audioAcc"
-              name="Audio Accuracy"
+              name={t('history.audioAccuracy')}
               stroke="#82ca9d"
               strokeWidth={2}
               activeDot={{ r: 8 }}
@@ -91,11 +160,11 @@ const HistoryPage: React.FC = () => {
 
       <h2 className="page-subtitle">
         <Sliders size={22} />
-        Difficulty Settings
+        {t('history.difficultySettings')}
       </h2>
       <Card className="chart-card">
         <ResponsiveContainer width="100%" height={300}>
-          <ComposedChart data={mockHistory}>
+          <ComposedChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--hover-color)" />
             <XAxis dataKey="date" stroke="var(--text-color)" />
             <YAxis yAxisId="left" label={{ value: 'N-Level / Length', angle: -90, position: 'insideLeft', fill: 'var(--text-color)' }} stroke="var(--text-color)" />
@@ -107,19 +176,19 @@ const HistoryPage: React.FC = () => {
               }}
             />
             <Legend />
-            <Bar yAxisId="left" dataKey="nLevel" name="N-Level" fill="#ff79c6" />
-            <Bar yAxisId="left" dataKey="sessionLength" name="Session Length" fill="#bd93f9" />
-            <Line yAxisId="right" type="monotone" dataKey="speed" name="Speed" stroke="#ffb86c" />
+            <Bar yAxisId="left" dataKey="nLevel" name={t('history.nLevel')} fill="#ff79c6" />
+            <Bar yAxisId="left" dataKey="sessionLength" name={t('history.sessionLength')} fill="#bd93f9" />
+            <Line yAxisId="right" type="monotone" dataKey="speed" name={t('history.speed')} stroke="#ffb86c" />
           </ComposedChart>
         </ResponsiveContainer>
       </Card>
 
       <h2 className="page-subtitle">
         <HistoryIcon size={22} />
-        Session History
+        {t('history.sessionHistory')}
       </h2>
       <div className="session-list">
-        {mockHistory.slice().reverse().map((session, index) => (
+        {chartData.slice().reverse().map((session, index) => (
           <Card key={index} className="session-card">
             <div className="session-info">
               <span className="session-date">{session.date}</span>
