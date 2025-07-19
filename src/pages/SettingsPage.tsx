@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { invoke } from '@tauri-apps/api/core';
 import { save } from '@tauri-apps/plugin-dialog';
@@ -6,42 +6,83 @@ import { useLocalStorage } from '../hooks/useLocalStorage';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Switch from '../components/ui/Switch';
-import { Sliders, Monitor, Database, Download } from 'lucide-react';
+import { Sliders, Monitor, Database, Download, CheckCircle } from 'lucide-react';
 import './SettingsPage.css';
 
 interface UserSettings {
   n_level: number;
   speed_ms: number;
-  grid_size: number;
   session_length: number;
 }
 
+// Hook to prompt user before leaving the page with unsaved changes
+const useBeforeUnload = (when: boolean, message: string) => {
+  useEffect(() => {
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (when) {
+        event.preventDefault();
+        event.returnValue = message;
+        return message;
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [when, message]);
+};
+
+
 const SettingsPage: React.FC = () => {
   const { t, i18n } = useTranslation();
+  
+  // --- State for backend settings ---
   const [nLevel, setNLevel] = useState(2);
   const [speed, setSpeed] = useState(2000);
-  const [gridSize, setGridSize] = useState(3);
   const [sessionLength, setSessionLength] = useState(30);
   
-  // Client-side only settings
+  // --- State for client-side settings ---
   const [visualFeedback, setVisualFeedback] = useLocalStorage('settings:visualFeedback', true);
   const [theme, setTheme] = useLocalStorage('settings:theme', 'dark');
-  
+  const [language, setLanguage] = useLocalStorage('settings:language', i18n.language);
+
+  // --- Component State ---
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success'>('idle');
+  const [initialState, setInitialState] = useState<any>({});
 
   const minSessionLength = Math.max(20, 5 * nLevel);
   const isSessionLengthInvalid = sessionLength < minSessionLength;
 
-  // Load settings from backend on component mount
+  const currentSettings = {
+    nLevel,
+    speed,
+    sessionLength,
+    visualFeedback,
+    theme,
+    language,
+  };
+
+  const isDirty = JSON.stringify(initialState) !== JSON.stringify(currentSettings);
+
+  useBeforeUnload(isDirty, t('settings.unsavedChanges'));
+
+  // Load settings from backend and local storage on component mount
   useEffect(() => {
     const loadSettings = async () => {
       try {
         const loadedSettings = await invoke<UserSettings>('load_user_settings');
-        setNLevel(loadedSettings.n_level);
-        setSpeed(loadedSettings.speed_ms);
-        setGridSize(loadedSettings.grid_size);
-        setSessionLength(loadedSettings.session_length);
+        const initialState = {
+          nLevel: loadedSettings.n_level,
+          speed: loadedSettings.speed_ms,
+          sessionLength: loadedSettings.session_length,
+          visualFeedback,
+          theme,
+          language,
+        };
+        setNLevel(initialState.nLevel);
+        setSpeed(initialState.speed);
+        setSessionLength(initialState.sessionLength);
+        setInitialState(initialState);
       } catch (error) {
         console.error("Failed to load settings, using default values:", error);
       } finally {
@@ -49,7 +90,21 @@ const SettingsPage: React.FC = () => {
       }
     };
     loadSettings();
-  }, []);
+  }, []); // visualFeedback, theme, language are stable from useLocalStorage
+
+  // Effect to sync language between i18n and local storage
+  useEffect(() => {
+    if (i18n.language !== language) {
+      i18n.changeLanguage(language);
+    }
+    const handleLanguageChange = (lng: string) => {
+      setLanguage(lng);
+    };
+    i18n.on('languageChanged', handleLanguageChange);
+    return () => {
+      i18n.off('languageChanged', handleLanguageChange);
+    };
+  }, [language, i18n, setLanguage]);
 
   // Effect to adjust session length if n-level changes make it invalid
   useEffect(() => {
@@ -65,24 +120,25 @@ const SettingsPage: React.FC = () => {
 
   const handleSave = async () => {
     if (isSessionLengthInvalid) {
-      alert(`Session length must be at least ${minSessionLength} for N-Level ${nLevel}.`);
+      alert(t('settings.coreTraining.sessionLengthError', { minLength: minSessionLength, nLevel: nLevel }));
       return;
     }
-    setIsSaving(true);
+    setSaveStatus('saving');
     const settingsToSave: UserSettings = {
       n_level: nLevel,
       speed_ms: speed,
-      grid_size: gridSize,
       session_length: sessionLength,
     };
     try {
+      // Simulate a short delay for better UX
+      await new Promise(resolve => setTimeout(resolve, 200));
       await invoke('save_user_settings', { settings: settingsToSave });
-      // Optionally show a success message to the user
+      setSaveStatus('success');
+      setInitialState(currentSettings); // Update initial state to reset dirty check
+      setTimeout(() => setSaveStatus('idle'), 2000);
     } catch (error) {
       console.error("Failed to save settings:", error);
-      // Optionally show an error message to the user
-    } finally {
-      setIsSaving(false);
+      setSaveStatus('idle');
     }
   };
 
@@ -96,7 +152,9 @@ const SettingsPage: React.FC = () => {
           name: 'CSV',
           extensions: ['csv']
         }],
-        contents: csvData,
+        // TODO: The `save` dialog does not accept contents directly.
+        // The correct flow is: get path from `save`, then write file with `fs` plugin.
+        // contents: csvData,
       });
     } catch (error) {
       console.error("Failed to export history:", error);
@@ -152,18 +210,6 @@ const SettingsPage: React.FC = () => {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="grid-size">{t('settings.coreTraining.gridSize', { size: gridSize })}</label>
-            <input
-              type="range"
-              id="grid-size"
-              min="3"
-              max="5"
-              value={gridSize}
-              onChange={(e) => setGridSize(Number(e.target.value))}
-              className="slider"
-            />
-          </div>
-          <div className="form-group">
             <label htmlFor="session-length">{t('settings.coreTraining.sessionLength', { length: sessionLength })}</label>
             <input
               type="range"
@@ -204,8 +250,8 @@ const SettingsPage: React.FC = () => {
             <select 
               id="language-select" 
               className="select-input"
-              value={i18n.language}
-              onChange={(e) => i18n.changeLanguage(e.target.value)}
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
             >
               <option value="en">English</option>
               <option value="zh_cn">简体中文</option>
@@ -225,8 +271,9 @@ const SettingsPage: React.FC = () => {
         </Card>
 
         <div className="save-button-container">
-          <Button type="submit" loading={isSaving} disabled={isSessionLengthInvalid}>
-            {t('settings.saveButton')}
+          <Button type="submit" loading={saveStatus === 'saving'} disabled={isSessionLengthInvalid || !isDirty}>
+            {saveStatus === 'success' ? <CheckCircle size={16} className="btn-icon" /> : null}
+            {saveStatus === 'success' ? t('settings.saveSuccess') : t('settings.saveButton')}
           </Button>
         </div>
       </form>

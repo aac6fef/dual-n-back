@@ -10,7 +10,6 @@ use chrono::{DateTime, Utc};
 pub struct UserSettings {
     pub n_level: usize,
     pub speed_ms: u64,
-    pub grid_size: u8,
     pub session_length: usize,
     // In the future, we can add stimulus_types: enum { Visual, Audio, Dual }
 }
@@ -20,7 +19,6 @@ impl Default for UserSettings {
         Self {
             n_level: 2,
             speed_ms: 2000,
-            grid_size: 3,
             session_length: 20,
         }
     }
@@ -89,11 +87,16 @@ pub fn save_session(db: &Db, session: &GameSession) -> Result<(), sled::Error> {
 
 pub fn load_all_sessions(db: &Db) -> Result<Vec<GameSession>, sled::Error> {
     let tree = db.open_tree(SESSIONS_TREE)?;
-    let mut sessions = Vec::new();
+    let mut sessions: Vec<GameSession> = Vec::new();
     for item in tree.iter() {
         let (_, bytes) = item?;
-        let session: GameSession = bincode::deserialize(&bytes).unwrap();
-        sessions.push(session);
+        match bincode::deserialize::<GameSession>(&bytes) {
+            Ok(session) => sessions.push(session),
+            Err(e) => {
+                // Log the error and skip the corrupted/outdated entry
+                eprintln!("Skipping session due to deserialization error: {}", e);
+            }
+        }
     }
     // Sort by timestamp, newest first
     sessions.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
@@ -121,13 +124,12 @@ mod tests {
         let custom_settings = UserSettings {
             n_level: 3,
             speed_ms: 1500,
-            grid_size: 4,
             session_length: 25,
         };
         save_settings(&db, &custom_settings).unwrap();
         let loaded_settings = load_settings(&db).unwrap();
         assert_eq!(loaded_settings.n_level, 3);
-        assert_eq!(loaded_settings.grid_size, 4);
+        assert_eq!(loaded_settings.session_length, 25);
     }
 
     #[test]

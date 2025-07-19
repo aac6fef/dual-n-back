@@ -21,6 +21,32 @@ pub struct AccuracyStats {
     pub false_negatives: u32,
 }
 
+impl AccuracyStats {
+    /// Calculates the Hit Rate (Sensitivity).
+    /// Formula: True Positives / (True Positives + False Negatives)
+    /// Returns a value between 0.0 and 1.0.
+    pub fn calculate_hit_rate(&self) -> f32 {
+        let total_matches = self.true_positives + self.false_negatives;
+        if total_matches == 0 {
+            0.0 // Or 1.0 if you want to represent "perfectly avoided non-existent matches"
+        } else {
+            self.true_positives as f32 / total_matches as f32
+        }
+    }
+
+    /// Calculates the False Alarm Rate.
+    /// Formula: False Positives / (False Positives + True Negatives)
+    /// Returns a value between 0.0 and 1.0.
+    pub fn calculate_false_alarm_rate(&self) -> f32 {
+        let total_non_matches = self.false_positives + self.true_negatives;
+        if total_non_matches == 0 {
+            0.0
+        } else {
+            self.false_positives as f32 / total_non_matches as f32
+        }
+    }
+}
+
 #[derive(Debug, Serialize, Clone)]
 pub struct GameState {
     pub settings: UserSettings,
@@ -42,7 +68,7 @@ impl GameState {
         let (audio_sequence, visual_sequence) = sequence_generator::generate_dual_nback_sequences(
             settings.n_level,
             settings.session_length,
-            settings.grid_size,
+            3, // Hardcode grid size to 3x3
         );
 
         Self {
@@ -139,7 +165,6 @@ mod tests {
         UserSettings {
             n_level: 2,
             speed_ms: 1000,
-            grid_size: 3,
             session_length: 5,
         }
     }

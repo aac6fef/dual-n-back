@@ -30,7 +30,6 @@ interface AccuracyStats {
 interface UserSettings {
   n_level: number;
   speed_ms: number;
-  grid_size: number;
   session_length: number;
 }
 
@@ -43,11 +42,16 @@ interface GameSession {
 }
 
 // --- Helper Functions ---
-const calculateAccuracy = (stats: AccuracyStats): number => {
-  const total = stats.true_positives + stats.true_negatives + stats.false_positives + stats.false_negatives;
-  if (total === 0) return 0;
-  const correct = stats.true_positives + stats.true_negatives;
-  return (correct / total) * 100;
+const calculateHitRate = (stats: AccuracyStats): number => {
+  const totalMatches = stats.true_positives + stats.false_negatives;
+  if (totalMatches === 0) return 100.0; // Perfect score if there were no matches to catch
+  return (stats.true_positives / totalMatches) * 100;
+};
+
+const calculateFalseAlarmRate = (stats: AccuracyStats): number => {
+  const totalNonMatches = stats.false_positives + stats.true_negatives;
+  if (totalNonMatches === 0) return 0.0;
+  return (stats.false_positives / totalNonMatches) * 100;
 };
 
 const transformHistoryData = (sessions: GameSession[]) => {
@@ -56,8 +60,10 @@ const transformHistoryData = (sessions: GameSession[]) => {
     nLevel: session.settings.n_level,
     speed: session.settings.speed_ms,
     sessionLength: session.settings.session_length,
-    visualAcc: calculateAccuracy(session.visual_stats),
-    audioAcc: calculateAccuracy(session.audio_stats),
+    visualHitRate: calculateHitRate(session.visual_stats),
+    audioHitRate: calculateHitRate(session.audio_stats),
+    visualFalseAlarmRate: calculateFalseAlarmRate(session.visual_stats),
+    audioFalseAlarmRate: calculateFalseAlarmRate(session.audio_stats),
   }));
 };
 
@@ -138,8 +144,8 @@ const HistoryPage: React.FC = () => {
             ))}
             <Line
               type="monotone"
-              dataKey="visualAcc"
-              name={t('history.visualAccuracy')}
+              dataKey="visualHitRate"
+              name={t('history.visualHitRate', 'V. Hit Rate')}
               stroke="#8884d8"
               strokeWidth={2}
               activeDot={{ r: 8 }}
@@ -147,8 +153,8 @@ const HistoryPage: React.FC = () => {
             />
             <Line
               type="monotone"
-              dataKey="audioAcc"
-              name={t('history.audioAccuracy')}
+              dataKey="audioHitRate"
+              name={t('history.audioHitRate', 'A. Hit Rate')}
               stroke="#82ca9d"
               strokeWidth={2}
               activeDot={{ r: 8 }}
@@ -192,11 +198,19 @@ const HistoryPage: React.FC = () => {
           <Card key={index} className="session-card">
             <div className="session-info">
               <span className="session-date">{session.date}</span>
-              <span className="session-nlevel">N-Level: {session.nLevel}</span>
+              <span className="session-nlevel">{t('history.nLevel')}: {session.nLevel}</span>
             </div>
             <div className="session-scores">
-              <span>V: {session.visualAcc.toFixed(1)}%</span>
-              <span>A: {session.audioAcc.toFixed(1)}%</span>
+              <div className="score-group">
+                <span className="score-label">{t('history.visual')}</span>
+                <span className="score-value">{t('history.hitRate')}: {session.visualHitRate.toFixed(1)}%</span>
+                <span className="score-value">{t('history.faRate')}: {session.visualFalseAlarmRate.toFixed(1)}%</span>
+              </div>
+              <div className="score-group">
+                <span className="score-label">{t('history.audio')}</span>
+                <span className="score-value">{t('history.hitRate')}: {session.audioHitRate.toFixed(1)}%</span>
+                <span className="score-value">{t('history.faRate')}: {session.audioFalseAlarmRate.toFixed(1)}%</span>
+              </div>
             </div>
             <ChevronRight className="session-arrow" size={24} />
           </Card>

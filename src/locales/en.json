@@ -6,7 +6,6 @@
       "title": "Core Training",
       "nLevel": "N-Level: {{level}}",
       "speed": "Speed (ms): {{speed}}",
-      "gridSize": "Grid Size: {{size}}x{{size}}",
       "sessionLength": "Session Length: {{length}}",
       "sessionLengthError": "Session length must be at least {{minLength}} for N-Level {{nLevel}}."
     },
@@ -20,7 +19,23 @@
       "title": "Data Management",
       "export": "Export Data"
     },
-    "saveButton": "Save Settings"
+    "saveButton": "Save Settings",
+    "saveSuccess": "Saved!",
+    "unsavedChanges": "You have unsaved changes. Are you sure you want to leave?"
+  },
+  "nav": {
+    "title": "N-Back",
+    "game": "Game",
+    "settings": "Settings",
+    "history": "History"
+  },
+  "gameStatus": {
+    "nLevel": "N-Level",
+    "turn": "Turn",
+    "vHit": "V. Hit",
+    "vFa": "V. FA",
+    "aHit": "A. Hit",
+    "aFa": "A. FA"
   },
   "history": {
     "title": "History & Progress",
@@ -29,8 +44,12 @@
     "progressChart": "Progress Chart",
     "difficultySettings": "Difficulty Settings",
     "sessionHistory": "Session History",
-    "visualAccuracy": "Visual Accuracy",
-    "audioAccuracy": "Audio Accuracy",
+    "visualHitRate": "Visual Hit Rate",
+    "audioHitRate": "Audio Hit Rate",
+    "visual": "Visual",
+    "audio": "Audio",
+    "hitRate": "Hit",
+    "faRate": "FA",
     "nLevel": "N-Level",
     "sessionLength": "Session Length",
     "speed": "Speed"
@@ -39,7 +58,9 @@
     "title": "Dual N-Back",
     "startGame": "Start Game",
     "gameOver": "Game Over",
-    "finalVisualAccuracy": "Final Visual Accuracy: {{accuracy}}%",
-    "finalAudioAccuracy": "Final Audio Accuracy: {{accuracy}}%"
+    "summaryVisual": "Visual: Hit Rate {{hitRate}}%, False Alarm {{faRate}}%",
+    "summaryAudio": "Audio: Hit Rate {{hitRate}}%, False Alarm {{faRate}}%",
+    "position": "Position",
+    "audio": "Audio"
   }
 }

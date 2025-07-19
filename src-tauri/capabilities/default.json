@@ -7,8 +7,9 @@
   ],
   "permissions": [
     "core:default",
+    "core:path:default",
+    "core:resources:default",
     "opener:default",
-    "dialog:default",
     "dialog:default"
   ]
 }

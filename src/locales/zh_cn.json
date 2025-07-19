@@ -20,7 +20,23 @@
       "title": "数据管理",
       "export": "导出数据"
     },
-    "saveButton": "保存设置"
+    "saveButton": "保存设置",
+    "saveSuccess": "已保存！",
+    "unsavedChanges": "您有未保存的更改。确定要离开吗？"
+  },
+  "nav": {
+    "title": "N-Back",
+    "game": "游戏",
+    "settings": "设置",
+    "history": "历史"
+  },
+  "gameStatus": {
+    "nLevel": "N-Level",
+    "turn": "回合",
+    "vHit": "视觉命中",
+    "vFa": "视觉虚警",
+    "aHit": "听觉命中",
+    "aFa": "听觉虚警"
   },
   "history": {
     "title": "历史与进度",
@@ -31,6 +47,12 @@
     "sessionHistory": "会话历史",
     "visualAccuracy": "视觉准确率",
     "audioAccuracy": "听觉准确率",
+    "visualHitRate": "视觉命中率",
+    "audioHitRate": "听觉命中率",
+    "visual": "视觉",
+    "audio": "听觉",
+    "hitRate": "命中率",
+    "faRate": "虚警率",
     "nLevel": "N-Level",
     "sessionLength": "会话长度",
     "speed": "速度"
@@ -39,7 +61,9 @@
     "title": "Dual N-Back",
     "startGame": "开始游戏",
     "gameOver": "游戏结束",
-    "finalVisualAccuracy": "最终视觉准确率: {{accuracy}}%",
-    "finalAudioAccuracy": "最终听觉准确率: {{accuracy}}%"
+    "summaryVisual": "视觉: 命中率 {{hitRate}}%, 虚警率 {{faRate}}%",
+    "summaryAudio": "听觉: 命中率 {{hitRate}}%, 虚警率 {{faRate}}%",
+    "position": "位置",
+    "audio": "声音"
   }
 }

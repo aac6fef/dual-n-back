@@ -2,12 +2,92 @@ mod game;
 mod persistence;
 pub mod sequence_generator;
 
-use game::{AppState, GameState, UserInput};
+use game::{AppState, GameState, UserInput, GameTurn};
 use persistence::{
     DbState, GameSession, UserSettings, load_all_sessions, load_settings, save_session, save_settings,
 };
 use serde::Serialize;
 use tauri::{Manager, State};
+
+// --- Frontend-Specific Data Structures ---
+// This ensures that the data sent to the frontend matches what it expects,
+// without altering the core game logic's internal state representation.
+
+#[derive(Serialize, Clone)]
+struct FrontendGameTurn {
+    visual_stimulus: VisualStimulus,
+    audio_stimulus: AudioStimulus,
+}
+
+#[derive(Serialize, Clone)]
+struct VisualStimulus {
+    position: u8,
+}
+
+#[derive(Serialize, Clone)]
+struct AudioStimulus {
+    letter: char,
+}
+
+impl From<&GameTurn> for FrontendGameTurn {
+    fn from(turn: &GameTurn) -> Self {
+        Self {
+            visual_stimulus: VisualStimulus { position: turn.visual },
+            audio_stimulus: AudioStimulus { letter: turn.audio },
+        }
+    }
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+struct FrontendGameState {
+    is_running: bool,
+    n_level: usize,
+    session_length: usize,
+    current_turn_index: usize,
+    current_turn: Option<FrontendGameTurn>,
+    visual_hit_rate: f32,
+    visual_false_alarm_rate: f32,
+    audio_hit_rate: f32,
+    audio_false_alarm_rate: f32,
+    // Add correct answers for the current turn for immediate feedback
+    correct_visual_match: bool,
+    correct_audio_match: bool,
+}
+
+impl From<&GameState> for FrontendGameState {
+    fn from(state: &GameState) -> Self {
+        let n = state.settings.n_level;
+        let idx = state.current_turn_index;
+
+        let mut correct_visual_match = false;
+        let mut correct_audio_match = false;
+
+        if idx >= n {
+            if let Some(current_turn) = state.turn_history.get(idx) {
+                if let Some(target_turn) = state.turn_history.get(idx - n) {
+                    correct_visual_match = current_turn.visual == target_turn.visual;
+                    correct_audio_match = current_turn.audio == target_turn.audio;
+                }
+            }
+        }
+
+        Self {
+            is_running: state.is_running,
+            n_level: state.settings.n_level,
+            session_length: state.settings.session_length,
+            current_turn_index: state.current_turn_index,
+            current_turn: state.turn_history.last().map(FrontendGameTurn::from),
+            visual_hit_rate: state.visual_stats.calculate_hit_rate(),
+            visual_false_alarm_rate: state.visual_stats.calculate_false_alarm_rate(),
+            audio_hit_rate: state.audio_stats.calculate_hit_rate(),
+            audio_false_alarm_rate: state.audio_stats.calculate_false_alarm_rate(),
+            correct_visual_match,
+            correct_audio_match,
+        }
+    }
+}
+
 
 // --- CSV Export Struct ---
 #[derive(Serialize)]
@@ -16,7 +96,6 @@ struct CsvRecord {
     n_level: usize,
     speed_ms: u64,
     session_length: usize,
-    grid_size: u8,
     visual_true_positives: u32,
     visual_true_negatives: u32,
     visual_false_positives: u32,
@@ -60,7 +139,6 @@ fn export_history_as_csv(db_state: State<DbState>) -> Result<String, String> {
         n_level: s.settings.n_level,
         speed_ms: s.settings.speed_ms,
         session_length: s.settings.session_length,
-        grid_size: s.settings.grid_size,
         visual_true_positives: s.visual_stats.true_positives,
         visual_true_negatives: s.visual_stats.true_negatives,
         visual_false_positives: s.visual_stats.false_positives,
@@ -129,8 +207,9 @@ fn submit_user_input(app_state: State<AppState>, db_state: State<DbState>, user_
 }
 
 #[tauri::command]
-fn get_game_state(state: State<AppState>) -> GameState {
-    state.0.lock().unwrap().clone()
+fn get_game_state(state: State<AppState>) -> FrontendGameState {
+    let game_state = state.0.lock().unwrap();
+    FrontendGameState::from(&*game_state)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
