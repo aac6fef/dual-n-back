@@ -7,6 +7,7 @@
       "nLevel": "N-Level: {{level}}",
       "speed": "Speed (ms): {{speed}}",
       "sessionLength": "Session Length: {{length}}",
+      "gridSize": "Grid Size: {{size}}x{{size}}",
       "sessionLengthError": "Session length must be at least {{minLength}} for N-Level {{nLevel}}."
     },
     "interface": {

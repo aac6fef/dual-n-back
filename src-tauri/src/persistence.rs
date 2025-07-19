@@ -11,6 +11,7 @@ pub struct UserSettings {
     pub n_level: usize,
     pub speed_ms: u64,
     pub session_length: usize,
+    pub grid_size: u8,
     // In the future, we can add stimulus_types: enum { Visual, Audio, Dual }
 }
 
@@ -20,6 +21,7 @@ impl Default for UserSettings {
             n_level: 2,
             speed_ms: 2000,
             session_length: 20,
+            grid_size: 3,
         }
     }
 }
@@ -125,6 +127,7 @@ mod tests {
             n_level: 3,
             speed_ms: 1500,
             session_length: 25,
+            grid_size: 4,
         };
         save_settings(&db, &custom_settings).unwrap();
         let loaded_settings = load_settings(&db).unwrap();

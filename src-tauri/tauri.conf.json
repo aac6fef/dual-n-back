@@ -21,6 +21,13 @@
       "csp": null
     }
   },
+  "plugins": {
+    "fs": {
+      "allowlist": {
+        "writeFile": true
+      }
+    }
+  },
   "bundle": {
     "active": true,
     "targets": "all",

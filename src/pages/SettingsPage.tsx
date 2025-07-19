@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { invoke } from '@tauri-apps/api/core';
 import { save } from '@tauri-apps/plugin-dialog';
+import { writeTextFile } from '@tauri-apps/plugin-fs';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -13,6 +14,7 @@ interface UserSettings {
   n_level: number;
   speed_ms: number;
   session_length: number;
+  grid_size: number;
 }
 
 // Hook to prompt user before leaving the page with unsaved changes
@@ -39,6 +41,7 @@ const SettingsPage: React.FC = () => {
   const [nLevel, setNLevel] = useState(2);
   const [speed, setSpeed] = useState(2000);
   const [sessionLength, setSessionLength] = useState(30);
+  const [gridSize, setGridSize] = useState(3);
   
   // --- State for client-side settings ---
   const [visualFeedback, setVisualFeedback] = useLocalStorage('settings:visualFeedback', true);
@@ -57,6 +60,7 @@ const SettingsPage: React.FC = () => {
     nLevel,
     speed,
     sessionLength,
+    gridSize,
     visualFeedback,
     theme,
     language,
@@ -75,6 +79,7 @@ const SettingsPage: React.FC = () => {
           nLevel: loadedSettings.n_level,
           speed: loadedSettings.speed_ms,
           sessionLength: loadedSettings.session_length,
+          gridSize: loadedSettings.grid_size,
           visualFeedback,
           theme,
           language,
@@ -82,6 +87,7 @@ const SettingsPage: React.FC = () => {
         setNLevel(initialState.nLevel);
         setSpeed(initialState.speed);
         setSessionLength(initialState.sessionLength);
+        setGridSize(initialState.gridSize);
         setInitialState(initialState);
       } catch (error) {
         console.error("Failed to load settings, using default values:", error);
@@ -128,6 +134,7 @@ const SettingsPage: React.FC = () => {
       n_level: nLevel,
       speed_ms: speed,
       session_length: sessionLength,
+      grid_size: gridSize,
     };
     try {
       // Simulate a short delay for better UX
@@ -145,17 +152,18 @@ const SettingsPage: React.FC = () => {
   const handleExport = async () => {
     try {
       const csvData = await invoke<string>('export_history_as_csv');
-      await save({
+      const filePath = await save({
         title: 'Save Game History',
         defaultPath: 'nback-history.csv',
         filters: [{
           name: 'CSV',
           extensions: ['csv']
         }],
-        // TODO: The `save` dialog does not accept contents directly.
-        // The correct flow is: get path from `save`, then write file with `fs` plugin.
-        // contents: csvData,
       });
+
+      if (filePath) {
+        await writeTextFile(filePath, csvData);
+      }
     } catch (error) {
       console.error("Failed to export history:", error);
       // Optionally show an error message to the user
@@ -225,6 +233,18 @@ const SettingsPage: React.FC = () => {
                 {t('settings.coreTraining.sessionLengthError', { minLength: minSessionLength, nLevel: nLevel })}
               </div>
             )}
+          </div>
+          <div className="form-group">
+            <label htmlFor="grid-size">{t('settings.coreTraining.gridSize', { size: gridSize })}</label>
+            <input
+              type="range"
+              id="grid-size"
+              min="3"
+              max="5"
+              value={gridSize}
+              onChange={(e) => setGridSize(Number(e.target.value))}
+              className="slider"
+            />
           </div>
         </Card>
 

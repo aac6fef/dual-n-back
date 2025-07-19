@@ -7,22 +7,21 @@ import GameControls, { FeedbackState } from '../components/GameControls';
 import GameStatus from '../components/GameStatus';
 
 // --- Data Structures mirroring Rust backend ---
-interface AccuracyStats {
-  true_positives: number;
-  true_negatives: number;
-  false_positives: number;
-  false_negatives: number;
-}
-
 interface GameTurn {
   visual_stimulus: { position: number };
   audio_stimulus: { letter: string };
 }
 
+interface UserSettings {
+  n_level: number;
+  speed_ms: number;
+  session_length: number;
+  grid_size: number;
+}
+
 interface GameState {
   isRunning: boolean;
-  nLevel: number;
-  sessionLength: number;
+  settings: UserSettings;
   currentTurnIndex: number;
   currentTurn: GameTurn | null;
   visualHitRate: number;
@@ -85,7 +84,7 @@ const GamePage: React.FC = () => {
 
   // --- Game Loop Effect ---
   useEffect(() => {
-    if (!gameState?.isRunning) {
+    if (!gameState || !gameState.isRunning) {
       return;
     }
 
@@ -109,16 +108,16 @@ const GamePage: React.FC = () => {
 
       } catch (error) {
         console.error("Failed to advance turn:", error);
-    // Stop the game on error to prevent infinite loops
-    setGameState(s => s ? { ...s, isRunning: false } : null);
-  }
-};
+        // Stop the game on error to prevent infinite loops
+        setGameState(s => s ? { ...s, isRunning: false } : null);
+      }
+    };
 
-    // TODO: Replace with speed from UserSettings
-    const timerId = setTimeout(advanceTurn, 2000); 
+    const gameSpeed = gameState.settings.speed_ms;
+    const timerId = setTimeout(advanceTurn, gameSpeed); 
 
     return () => clearTimeout(timerId);
-  }, [gameState?.isRunning, gameState?.currentTurnIndex]); // More specific dependencies
+  }, [gameState]); // Re-run this effect whenever the gameState object itself changes.
 
   const handleStartGame = useCallback(async () => {
     setIsLoading(true);
@@ -193,9 +192,9 @@ const GamePage: React.FC = () => {
     return (
       <>
         <GameStatus
-          nLevel={currentGameState.nLevel}
+          nLevel={currentGameState.settings.n_level}
           turn={currentGameState.currentTurnIndex}
-          totalTurns={currentGameState.sessionLength}
+          totalTurns={currentGameState.settings.session_length}
           visualHitRate={currentGameState.visualHitRate * 100}
           visualFalseAlarmRate={currentGameState.visualFalseAlarmRate * 100}
           audioHitRate={currentGameState.audioHitRate * 100}

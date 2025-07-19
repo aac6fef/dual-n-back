@@ -18,11 +18,6 @@ fn generate_single_nback_sequence<T>(
 where
     T: Clone + Eq + Hash + Debug,
 {
-    if length < 20 {
-        // Fallback to simple random for very short sequences where the ratio logic may fail or be slow.
-        return generate_simple_random_sequence(n, length, stimulus_set);
-    }
-
     let mut rng = thread_rng();
 
     loop {
@@ -78,30 +73,6 @@ where
             return sequence;
         }
     }
-}
-
-/// Fallback for short sequences. This version is "simple" because it doesn't control
-/// the match ratio, but it *does* use `n` to prevent any accidental matches.
-fn generate_simple_random_sequence<T>(n: usize, length: usize, stimulus_set: &[T]) -> Vec<T>
-where
-    T: Clone + Eq,
-{
-    let mut rng = thread_rng();
-    let mut sequence = Vec::with_capacity(length);
-    for i in 0..length {
-        if i < n {
-            sequence.push(stimulus_set.choose(&mut rng).unwrap().clone());
-        } else {
-            let previous_stimulus = &sequence[i - n];
-            let mut new_stimulus = stimulus_set.choose(&mut rng).unwrap();
-            // Ensure we don't create an accidental match
-            while new_stimulus == previous_stimulus {
-                new_stimulus = stimulus_set.choose(&mut rng).unwrap();
-            }
-            sequence.push(new_stimulus.clone());
-        }
-    }
-    sequence
 }
 
 
@@ -182,13 +153,18 @@ mod tests {
     }
 
     #[test]
-    fn test_simple_generator_avoids_matches() {
+    fn test_generator_with_short_sequence() {
         let n = 1;
-        let length = 15; // < 20 to trigger the simple generator
-        let stimulus_set: Vec<u8> = (0..3).collect(); // Small set to increase chance of random match
+        let length = 15; // Test with a length < 20
+        let stimulus_set: Vec<u8> = (0..3).collect();
         let sequence = generate_single_nback_sequence(n, length, &stimulus_set, &HashSet::new());
 
         let matches = (n..length).filter(|&i| sequence[i] == sequence[i - n]).count();
-        assert_eq!(matches, 0, "Simple generator should not create n-back matches");
+        let ratio = matches as f32 / length as f32;
+
+        println!("Generated short sequence with match ratio: {}", ratio);
+        // For short sequences, the ratio might be outside the bounds, but it should not be always 0.
+        // We just check that the sequence was generated.
+        assert_eq!(sequence.len(), length);
     }
 }

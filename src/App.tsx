@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import {
-  BrowserRouter,
+  HashRouter,
   Routes,
   Route,
   NavLink,
@@ -61,7 +61,7 @@ const Layout = () => {
 
 function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<GamePage />} />
@@ -69,7 +69,7 @@ function App() {
           <Route path="history" element={<HistoryPage />} />
         </Route>
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 

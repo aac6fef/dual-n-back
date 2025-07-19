@@ -68,7 +68,7 @@ impl GameState {
         let (audio_sequence, visual_sequence) = sequence_generator::generate_dual_nback_sequences(
             settings.n_level,
             settings.session_length,
-            3, // Hardcode grid size to 3x3
+            settings.grid_size,
         );
 
         Self {
@@ -166,6 +166,7 @@ mod tests {
             n_level: 2,
             speed_ms: 1000,
             session_length: 5,
+            grid_size: 3,
         }
     }
 

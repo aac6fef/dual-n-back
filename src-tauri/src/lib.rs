@@ -42,8 +42,7 @@ impl From<&GameTurn> for FrontendGameTurn {
 #[serde(rename_all = "camelCase")]
 struct FrontendGameState {
     is_running: bool,
-    n_level: usize,
-    session_length: usize,
+    settings: UserSettings, // Pass the whole settings object
     current_turn_index: usize,
     current_turn: Option<FrontendGameTurn>,
     visual_hit_rate: f32,
@@ -74,8 +73,7 @@ impl From<&GameState> for FrontendGameState {
 
         Self {
             is_running: state.is_running,
-            n_level: state.settings.n_level,
-            session_length: state.settings.session_length,
+            settings: state.settings.clone(),
             current_turn_index: state.current_turn_index,
             current_turn: state.turn_history.last().map(FrontendGameTurn::from),
             visual_hit_rate: state.visual_stats.calculate_hit_rate(),
@@ -115,11 +113,19 @@ fn load_user_settings(db_state: State<DbState>) -> Result<UserSettings, String> 
 
 #[tauri::command]
 fn save_user_settings(
+    app_state: State<AppState>,
     db_state: State<DbState>,
     settings: UserSettings,
 ) -> Result<(), String> {
+    // First, save the settings to the persistent database
     let db = db_state.0.lock().unwrap();
-    save_settings(&db, &settings).map_err(|e| e.to_string())
+    save_settings(&db, &settings).map_err(|e| e.to_string())?;
+
+    // Then, update the in-memory game state with the new settings
+    let mut game_state = app_state.0.lock().unwrap();
+    game_state.settings = settings;
+
+    Ok(())
 }
 
 // --- Game History Commands ---
@@ -161,15 +167,16 @@ fn export_history_as_csv(db_state: State<DbState>) -> Result<String, String> {
 
 // --- Game Logic Commands ---
 #[tauri::command]
-fn start_game(app_state: State<AppState>, db_state: State<DbState>) {
+fn start_game(app_state: State<AppState>) {
     let mut game_state = app_state.0.lock().unwrap();
-    let db = db_state.0.lock().unwrap();
     
-    // Create a new game state, which pre-generates the sequences
-    let mut settings = load_settings(&db).unwrap_or_default();
+    // Create a new game state using the settings already in memory.
+    // This ensures that any changes made in the settings page are immediately reflected.
+    let mut settings = game_state.settings.clone();
     if settings.session_length < 20 {
         settings.session_length = 20; // Enforce minimum length
     }
+
     *game_state = GameState::new(settings);
     game_state.is_running = true;
     
