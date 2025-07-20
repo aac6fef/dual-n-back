@@ -66,7 +66,7 @@ const GamePage: React.FC = () => {
     if (letter) {
       const playSound = () => {
         try {
-          const soundName = `${letter}.aiff`;
+          const soundName = `${letter}.wav`;
           // Assets in `public` are served from the root.
           const audioSrc = `/sounds/${soundName}`;
           
