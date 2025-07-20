@@ -69,11 +69,10 @@
   height: 48px;
 }
 
-/* Gradient icon color */
 .info-panel-icon svg {
   width: 28px;
   height: 28px;
-  stroke: url(#icon-gradient);
+  stroke: var(--text-color);
 }
 
 .info-panel-text {

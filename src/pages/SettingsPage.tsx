@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { invoke } from '@tauri-apps/api/core';
-import { save } from '@tauri-apps/plugin-dialog';
+import { save, confirm } from '@tauri-apps/plugin-dialog';
 import { writeTextFile } from '@tauri-apps/plugin-fs';
 import { useSettings } from '../contexts/SettingsContext';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Switch from '../components/ui/Switch';
-import { Sliders, Monitor, Database, Download, CheckCircle } from 'lucide-react';
+import { Sliders, Monitor, Database, Download, CheckCircle, Trash2, Code } from 'lucide-react';
 import './SettingsPage.css';
 
 // Hook to prompt user before leaving the page with unsaved changes
@@ -28,22 +28,27 @@ const useBeforeUnload = (when: boolean, message: string) => {
 
 const SettingsPage: React.FC = () => {
   const { t } = useTranslation();
-  const { settings, setSettings, saveSettings, isLoading, isDirty } = useSettings();
+  const { settings, setSettings, saveSettings, resetSettings, isLoading, isDirty } = useSettings();
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success'>('idle');
+  const [isGeneratingHistory, setIsGeneratingHistory] = useState(false);
 
-  const { n_level, speed_ms, session_length, grid_size, visualFeedback, theme, language } = settings;
+  const { n_level, speed_ms, session_length, theme, language, allowFastSpeed } = settings;
 
+  const minSpeed = allowFastSpeed ? 500 : 1500;
   const minSessionLength = Math.max(20, 5 * n_level);
   const isSessionLengthInvalid = session_length < minSessionLength;
 
   useBeforeUnload(isDirty, t('settings.unsavedChanges'));
 
-  // Effect to adjust session length if n-level changes make it invalid
+  // Effect to adjust session length and speed if settings change make them invalid
   useEffect(() => {
     if (session_length < minSessionLength) {
       setSettings(prev => ({ ...prev, session_length: minSessionLength }));
     }
-  }, [n_level, session_length, minSessionLength, setSettings]);
+    if (speed_ms < minSpeed) {
+      setSettings(prev => ({ ...prev, speed_ms: minSpeed }));
+    }
+  }, [n_level, session_length, minSessionLength, speed_ms, minSpeed, setSettings]);
 
   const handleSave = async () => {
     if (isSessionLengthInvalid) {
@@ -80,6 +85,28 @@ const SettingsPage: React.FC = () => {
     } catch (error) {
       console.error("Failed to export history:", error);
       // Optionally show an error message to the user
+    }
+  };
+
+  const handleReset = async () => {
+    const confirmed = await confirm(t('settings.dataManagement.resetConfirmation'), {
+      title: t('settings.dataManagement.resetTitle'),
+    });
+    if (confirmed) {
+      await resetSettings();
+      // Maybe show a success message
+    }
+  };
+
+  const handleGenerateHistory = async () => {
+    setIsGeneratingHistory(true);
+    try {
+      await invoke('generate_fake_history');
+      // Maybe show a success message
+    } catch (error) {
+      console.error("Failed to generate fake history:", error);
+    } finally {
+      setIsGeneratingHistory(false);
     }
   };
 
@@ -122,7 +149,7 @@ const SettingsPage: React.FC = () => {
             <input
               type="range"
               id="speed"
-              min="500"
+              min={minSpeed}
               max="5000"
               step="100"
               value={speed_ms}
@@ -147,18 +174,6 @@ const SettingsPage: React.FC = () => {
               </div>
             )}
           </div>
-          <div className="form-group">
-            <label htmlFor="grid-size">{t('settings.coreTraining.gridSize', { size: grid_size })}</label>
-            <input
-              type="range"
-              id="grid-size"
-              min="3"
-              max="5"
-              value={grid_size}
-              onChange={(e) => setSettings(s => ({ ...s, grid_size: Number(e.target.value) }))}
-              className="slider"
-            />
-          </div>
         </Card>
 
         <Card className="settings-card">
@@ -166,12 +181,6 @@ const SettingsPage: React.FC = () => {
             <Monitor size={20} />
             {t('settings.interface.title')}
           </h2>
-          <Switch
-            id="visual-feedback"
-            label={t('settings.interface.visualFeedback')}
-            checked={visualFeedback}
-            onChange={(e) => setSettings(s => ({ ...s, visualFeedback: e.target.checked }))}
-          />
           <Switch
             id="theme-switcher"
             label={t('settings.interface.lightTheme')}
@@ -197,9 +206,36 @@ const SettingsPage: React.FC = () => {
             <Database size={20} />
             {t('settings.dataManagement.title')}
           </h2>
-          <Button type="button" variant="secondary" onClick={handleExport}>
-            <Download size={16} className="btn-icon" />
-            {t('settings.dataManagement.export')}
+          <div className="data-management-buttons">
+            <Button type="button" variant="secondary" onClick={handleExport}>
+              <Download size={16} className="btn-icon" />
+              {t('settings.dataManagement.export')}
+            </Button>
+            <Button type="button" variant="danger" onClick={handleReset}>
+              <Trash2 size={16} className="btn-icon" />
+              {t('settings.dataManagement.reset')}
+            </Button>
+          </div>
+        </Card>
+
+        <Card className="settings-card">
+          <h2 className="card-title">
+            <Code size={20} />
+            {t('settings.developer.title')}
+          </h2>
+          <Switch
+            id="allow-fast-speed"
+            label={t('settings.developer.allowFastSpeed')}
+            checked={allowFastSpeed}
+            onChange={(e) => setSettings(s => ({ ...s, allowFastSpeed: e.target.checked }))}
+          />
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={handleGenerateHistory}
+            loading={isGeneratingHistory}
+          >
+            {t('settings.developer.generateHistory')}
           </Button>
         </Card>
 

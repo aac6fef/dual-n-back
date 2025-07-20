@@ -8,14 +8,13 @@ export interface UserSettings {
   n_level: number;
   speed_ms: number;
   session_length: number;
-  grid_size: number;
 }
 
 // Interface for all settings, including client-side ones
 export interface AppSettings extends UserSettings {
-  visualFeedback: boolean;
   theme: string;
   language: string;
+  allowFastSpeed: boolean;
 }
 
 // Default settings to be used on first load or if loading fails
@@ -23,10 +22,9 @@ const defaultSettings: AppSettings = {
   n_level: 2,
   speed_ms: 2000,
   session_length: 30,
-  grid_size: 3,
-  visualFeedback: true,
   theme: 'dark',
   language: 'en',
+  allowFastSpeed: false,
 };
 
 // Type for the context value
@@ -34,6 +32,7 @@ interface SettingsContextType {
   settings: AppSettings;
   setSettings: React.Dispatch<React.SetStateAction<AppSettings>>;
   saveSettings: () => Promise<void>;
+  resetSettings: () => Promise<void>;
   isLoading: boolean;
   isDirty: boolean;
   initialState: AppSettings;
@@ -50,44 +49,46 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [isLoading, setIsLoading] = useState(true);
 
   // Local storage hooks
-  const [visualFeedback, setVisualFeedback] = useLocalStorage('settings:visualFeedback', defaultSettings.visualFeedback);
   const [theme, setTheme] = useLocalStorage('settings:theme', defaultSettings.theme);
   const [language, setLanguage] = useLocalStorage('settings:language', defaultSettings.language);
+  const [allowFastSpeed, setAllowFastSpeed] = useLocalStorage('settings:allowFastSpeed', defaultSettings.allowFastSpeed);
+
+  const loadSettings = async () => {
+    setIsLoading(true);
+    try {
+      const loaded = await invoke<UserSettings>('load_user_settings');
+      const fullSettings = {
+        ...loaded,
+        theme,
+        language,
+        allowFastSpeed,
+      };
+      setSettings(fullSettings);
+      setInitialState(fullSettings);
+    } catch (error) {
+      console.error("Failed to load backend settings, using defaults:", error);
+      const fullSettings = {
+        ...defaultSettings,
+        theme,
+        language,
+        allowFastSpeed,
+      };
+      setSettings(fullSettings);
+      setInitialState(fullSettings);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Load backend settings on initial mount
   useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        const loaded = await invoke<UserSettings>('load_user_settings');
-        const fullSettings = {
-          ...loaded,
-          visualFeedback,
-          theme,
-          language,
-        };
-        setSettings(fullSettings);
-        setInitialState(fullSettings);
-      } catch (error) {
-        console.error("Failed to load backend settings, using defaults:", error);
-        const fullSettings = {
-          ...defaultSettings,
-          visualFeedback,
-          theme,
-          language,
-        };
-        setSettings(fullSettings);
-        setInitialState(fullSettings);
-      } finally {
-        setIsLoading(false);
-      }
-    };
     loadSettings();
   }, []); // Dependencies are intentionally omitted to run only once
 
   // Sync local storage values with the main settings state
   useEffect(() => {
-    setSettings(prev => ({ ...prev, visualFeedback, theme, language }));
-  }, [visualFeedback, theme, language]);
+    setSettings(prev => ({ ...prev, theme, language, allowFastSpeed }));
+  }, [theme, language, allowFastSpeed]);
 
   // Effect to apply theme and language changes globally
   useEffect(() => {
@@ -104,23 +105,33 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
       n_level: settings.n_level,
       speed_ms: settings.speed_ms,
       session_length: settings.session_length,
-      grid_size: settings.grid_size,
     };
     await invoke('save_user_settings', { settings: backendSettings });
     
     // Update local storage values
-    setVisualFeedback(settings.visualFeedback);
     setTheme(settings.theme);
     setLanguage(settings.language);
+    setAllowFastSpeed(settings.allowFastSpeed);
 
     // Update initial state to reflect the saved state
     setInitialState(settings);
+  };
+
+  const resetSettings = async () => {
+    await invoke('reset_all_data');
+    // Reset all local storage values to default
+    setTheme(defaultSettings.theme);
+    setLanguage(defaultSettings.language);
+    setAllowFastSpeed(defaultSettings.allowFastSpeed);
+    // Reload settings from backend (which are now default)
+    await loadSettings();
   };
 
   const value = {
     settings,
     setSettings,
     saveSettings,
+    resetSettings,
     isLoading,
     isDirty,
     initialState,

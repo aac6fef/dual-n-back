@@ -80,7 +80,6 @@ where
 pub fn generate_dual_nback_sequences(
     n: usize,
     length: usize,
-    grid_size: u8,
 ) -> (Vec<char>, Vec<u8>) {
     if n >= length {
         panic!("N-value must be less than the sequence length.");
@@ -89,7 +88,7 @@ pub fn generate_dual_nback_sequences(
     const AUDITORY_STIMULI: &[char] = &[
         'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
     ];
-    let visual_stimuli: Vec<u8> = (0..(grid_size as u16 * grid_size as u16) as u8).collect();
+    let visual_stimuli: Vec<u8> = (0..9).collect(); // Always 3x3 grid
 
     // 1. Generate audio sequence
     let audio_sequence =
@@ -133,7 +132,7 @@ mod tests {
     fn test_dual_sequence_generation() {
         let n = 3;
         let length = 100;
-        let (audio_seq, visual_seq) = generate_dual_nback_sequences(n, length, 3);
+        let (audio_seq, visual_seq) = generate_dual_nback_sequences(n, length);
 
         assert_eq!(audio_seq.len(), length);
         assert_eq!(visual_seq.len(), length);

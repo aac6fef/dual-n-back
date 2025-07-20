@@ -2,11 +2,11 @@ import React from 'react';
 import './Grid.css';
 
 interface GridProps {
-  size?: number;
   activeIndex?: number | null;
 }
 
-const Grid: React.FC<GridProps> = ({ size = 3, activeIndex = null }) => {
+const Grid: React.FC<GridProps> = ({ activeIndex = null }) => {
+  const size = 3;
   const cells = Array.from({ length: size * size });
 
   const gridStyle = {

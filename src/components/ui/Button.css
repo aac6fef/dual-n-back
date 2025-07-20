@@ -60,3 +60,14 @@
 .btn-secondary:hover:not(:disabled) {
   background-color: #565f89;
 }
+
+/* Danger Button */
+.btn-danger {
+  background-color: #e5484d;
+  color: #fff;
+  border: 1px solid #e5484d;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background-color: #f05f65;
+}

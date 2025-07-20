@@ -53,21 +53,9 @@ const Layout = () => {
   );
 };
 
-const GlobalSVGDefs = () => (
-  <svg width="0" height="0" style={{ position: 'absolute' }}>
-    <defs>
-      <linearGradient id="icon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" style={{ stopColor: 'var(--color-primary)', stopOpacity: 1 }} />
-        <stop offset="100%" style={{ stopColor: 'var(--color-accent)', stopOpacity: 1 }} />
-      </linearGradient>
-    </defs>
-  </svg>
-);
-
 function App() {
   return (
     <SettingsProvider>
-      <GlobalSVGDefs />
       <HashRouter>
         <Routes>
           <Route path="/" element={<Layout />}>

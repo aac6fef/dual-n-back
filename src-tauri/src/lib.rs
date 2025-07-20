@@ -2,10 +2,13 @@ mod game;
 mod persistence;
 pub mod sequence_generator;
 
-use game::{AppState, GameState, UserInput, GameTurn};
+use chrono::Duration;
+use game::{AccuracyStats, AppState, GameState, GameTurn, UserInput};
 use persistence::{
-    DbState, GameSession, UserSettings, load_all_sessions, load_settings, save_session, save_settings,
+    clear_all_data, load_all_sessions, load_settings, save_session, save_settings, DbState,
+    GameSession, UserSettings,
 };
+use rand::prelude::*;
 use serde::Serialize;
 use tauri::{Manager, State};
 
@@ -126,6 +129,81 @@ fn save_user_settings(
     game_state.settings = settings;
 
     Ok(())
+}
+
+#[tauri::command]
+fn reset_all_data(db_state: State<DbState>) -> Result<(), String> {
+    let db = db_state.0.lock().unwrap();
+    clear_all_data(&db).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+async fn generate_fake_history(db_state: State<'_, DbState>) -> Result<(), String> {
+    let db = db_state.0.lock().unwrap().clone();
+    tauri::async_runtime::spawn(async move {
+        let mut rng = thread_rng();
+        for i in 0..15 {
+        let settings = UserSettings {
+            n_level: rng.gen_range(2..=5),
+            speed_ms: rng.gen_range(1500..=3000),
+            session_length: rng.gen_range(20..=50),
+        };
+
+        let (audio_sequence, visual_sequence) =
+            sequence_generator::generate_dual_nback_sequences(
+                settings.n_level,
+                settings.session_length,
+            );
+
+        let turn_history: Vec<GameTurn> = audio_sequence
+            .iter()
+            .zip(visual_sequence.iter())
+            .map(|(&audio, &visual)| GameTurn { audio, visual })
+            .collect();
+
+        let total_possible_audio_matches =
+            (settings.n_level..settings.session_length).fold(0, |acc, i| {
+                if turn_history[i].audio == turn_history[i - settings.n_level].audio {
+                    acc + 1
+                } else {
+                    acc
+                }
+            });
+
+        let total_possible_visual_matches =
+            (settings.n_level..settings.session_length).fold(0, |acc, i| {
+                if turn_history[i].visual == turn_history[i - settings.n_level].visual {
+                    acc + 1
+                } else {
+                    acc
+                }
+            });
+
+        let audio_stats = AccuracyStats {
+            true_positives: rng.gen_range(0..=total_possible_audio_matches),
+            false_negatives: rng.gen_range(0..=5),
+            true_negatives: rng.gen_range(10..=40),
+            false_positives: rng.gen_range(0..=5),
+        };
+
+        let visual_stats = AccuracyStats {
+            true_positives: rng.gen_range(0..=total_possible_visual_matches),
+            false_negatives: rng.gen_range(0..=5),
+            true_negatives: rng.gen_range(10..=40),
+            false_positives: rng.gen_range(0..=5),
+        };
+
+        let mut session =
+            GameSession::new(settings, turn_history, visual_stats, audio_stats);
+        session.timestamp = session.timestamp - Duration::days(i);
+
+            if let Err(e) = save_session(&db, &session) {
+                eprintln!("Failed to save generated session: {}", e);
+            }
+        }
+    })
+    .await
+    .map_err(|e| e.to_string())
 }
 
 // --- Game History Commands ---
@@ -252,7 +330,9 @@ pub fn run() {
             load_user_settings,
             save_user_settings,
             get_game_history,
-            export_history_as_csv
+            export_history_as_csv,
+            reset_all_data,
+            generate_fake_history
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

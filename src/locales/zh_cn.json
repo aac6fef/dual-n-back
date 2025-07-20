@@ -18,7 +18,15 @@
     },
     "dataManagement": {
       "title": "数据管理",
-      "export": "导出数据"
+      "export": "导出数据",
+      "reset": "重置应用",
+      "resetTitle": "确认重置",
+      "resetConfirmation": "您确定要重置所有数据吗？这将删除您的所有历史记录并恢复默认设置。此操作无法撤销。"
+    },
+    "developer": {
+      "title": "开发者选项",
+      "allowFastSpeed": "允许非常短的间隔 (<1500ms)",
+      "generateHistory": "生成虚假历史记录"
     },
     "saveButton": "保存设置",
     "saveSuccess": "已保存！",

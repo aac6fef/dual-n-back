@@ -18,6 +18,12 @@
   gap: 0.75rem;
 }
 
+.data-management-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
 .save-button-container {
   display: flex;
   justify-content: flex-end;

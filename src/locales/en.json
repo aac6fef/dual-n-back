@@ -18,7 +18,15 @@
     },
     "dataManagement": {
       "title": "Data Management",
-      "export": "Export Data"
+      "export": "Export Data",
+      "reset": "Reset Application",
+      "resetTitle": "Confirm Reset",
+      "resetConfirmation": "Are you sure you want to reset all data? This will delete all your history and restore default settings. This action cannot be undone."
+    },
+    "developer": {
+      "title": "Developer Options",
+      "allowFastSpeed": "Allow very short intervals (<1500ms)",
+      "generateHistory": "Generate Fake History"
     },
     "saveButton": "Save Settings",
     "saveSuccess": "Saved!",
