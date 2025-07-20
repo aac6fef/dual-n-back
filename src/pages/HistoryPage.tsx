@@ -102,6 +102,9 @@ const HistoryPage: React.FC = () => {
   }, []);
 
   const chartData = transformHistoryData(history);
+  const chartMinWidth = 700;
+  const pointWidth = 30;
+  const dynamicChartWidth = Math.max(chartMinWidth, chartData.length * pointWidth);
 
   const nLevelChangePoints = chartData.reduce((acc, session, index, arr) => {
     if (index > 0 && session.nLevel !== arr[index - 1].nLevel) {
@@ -109,6 +112,32 @@ const HistoryPage: React.FC = () => {
     }
     return acc;
   }, [] as { x: string; nLevel: number }[]);
+
+  // --- Custom X-axis Tick Formatter ---
+  let lastDisplayedDate = '';
+  const formatXAxis = (tickItem: string) => {
+    if (tickItem !== lastDisplayedDate) {
+      lastDisplayedDate = tickItem;
+      return tickItem;
+    }
+    return '';
+  };
+  // We need to reset the `lastDisplayedDate` for each chart.
+  // A bit of a hack, but Recharts doesn't have a built-in way to manage this across charts.
+  const resetDateTracker = () => {
+    lastDisplayedDate = '';
+    return null;
+  }
+
+  const tooltipValueFormatter = (value: number | string, name: string) => {
+    if (typeof value === 'number') {
+      const roundedValue = value.toFixed(2);
+      const unit = name.toLowerCase().includes('rate') ? '%' : '';
+      return [`${roundedValue}${unit}`, name];
+    }
+    return [value, name];
+  };
+
 
   if (isLoading) {
     return <div className="history-container"><h1 className="page-title">{t('history.loading')}</h1></div>;
@@ -128,87 +157,110 @@ const HistoryPage: React.FC = () => {
       <h1 className="page-title">{t('history.title')}</h1>
 
       <div className="charts-grid">
-        <div className="chart-container">
-          <h2 className="page-subtitle">
-            <Target size={22} />
-            {t('history.hitRateChart')}
-          </h2>
-          <Card className="chart-card">
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--hover-color)" />
-                <XAxis dataKey="date" stroke="var(--text-color)" />
+        <div className="chart-wrapper">
+          <div className="chart-header">
+            <h2 className="page-subtitle">
+              <Target size={22} />
+              {t('history.hitRateChart')}
+            </h2>
+            <div className="custom-legend">
+              <div className="legend-item"><span className="legend-color-box" style={{ backgroundColor: '#8884d8' }}></span>{t('history.visualHitRate')}</div>
+              <div className="legend-item"><span className="legend-color-box" style={{ backgroundColor: '#82ca9d' }}></span>{t('history.audioHitRate')}</div>
+            </div>
+          </div>
+          <div className="chart-container">
+            <Card className="chart-card">
+              {resetDateTracker()}
+              <LineChart width={dynamicChartWidth} height={300} data={chartData} margin={{ top: 20, right: 20, left: 0, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--hover-color)" />
+              <XAxis dataKey="date" stroke="var(--text-color)" interval={0} angle={-30} textAnchor="end" height={70} tickFormatter={formatXAxis} />
                 <YAxis stroke="var(--text-color)" domain={[50, 100]} unit="%" />
                 <Tooltip
+                  formatter={tooltipValueFormatter}
                   contentStyle={{
                     backgroundColor: 'var(--sidebar-color)',
                     borderColor: 'var(--hover-color)',
                   }}
                 />
-                <Legend />
                 {nLevelChangePoints.map((p, i) => (
                   <ReferenceLine key={i} x={p.x} stroke="var(--accent-color)" strokeDasharray="3 3">
                     <Label value={`N=${p.nLevel}`} position="insideTopRight" fill="var(--accent-color)" fontSize={12} />
                   </ReferenceLine>
                 ))}
-                <Line type="monotone" dataKey="visualHitRate" name={t('history.visualHitRate')} stroke="#8884d8" strokeWidth={2} activeDot={{ r: 6 }} dot={{ r: 3 }} />
-                <Line type="monotone" dataKey="audioHitRate" name={t('history.audioHitRate')} stroke="#82ca9d" strokeWidth={2} activeDot={{ r: 6 }} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="visualHitRate" name={t('history.visualHitRate')} stroke="#8884d8" strokeWidth={2} activeDot={{ r: 6 }} dot={{ r: 3 }} legendType="none" />
+                <Line type="monotone" dataKey="audioHitRate" name={t('history.audioHitRate')} stroke="#82ca9d" strokeWidth={2} activeDot={{ r: 6 }} dot={{ r: 3 }} legendType="none" />
               </LineChart>
-            </ResponsiveContainer>
-          </Card>
+            </Card>
+          </div>
         </div>
 
-        <div className="chart-container">
-          <h2 className="page-subtitle">
-            <AlertTriangle size={22} />
-            {t('history.falseAlarmChart')}
-          </h2>
-          <Card className="chart-card">
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--hover-color)" />
-                <XAxis dataKey="date" stroke="var(--text-color)" />
-                <YAxis stroke="var(--text-color)" domain={[0, 25]} unit="%" />
+        <div className="chart-wrapper">
+          <div className="chart-header">
+            <h2 className="page-subtitle">
+              <AlertTriangle size={22} />
+              {t('history.falseAlarmChart')}
+            </h2>
+            <div className="custom-legend">
+              <div className="legend-item"><span className="legend-color-box" style={{ backgroundColor: '#ffc658' }}></span>{t('history.visualFaRate')}</div>
+              <div className="legend-item"><span className="legend-color-box" style={{ backgroundColor: '#ff8042' }}></span>{t('history.audioFaRate')}</div>
+            </div>
+          </div>
+          <div className="chart-container">
+            <Card className="chart-card">
+              {resetDateTracker()}
+              <LineChart width={dynamicChartWidth} height={300} data={chartData} margin={{ top: 20, right: 20, left: 0, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--hover-color)" />
+              <XAxis dataKey="date" stroke="var(--text-color)" interval={0} angle={-30} textAnchor="end" height={70} tickFormatter={formatXAxis} />
+                <YAxis stroke="var(--text-color)" domain={[0, 100]} unit="%" />
                 <Tooltip
+                  formatter={tooltipValueFormatter}
                   contentStyle={{
                     backgroundColor: 'var(--sidebar-color)',
                     borderColor: 'var(--hover-color)',
                   }}
                 />
-                <Legend />
-                <Line type="monotone" dataKey="visualFalseAlarmRate" name={t('history.visualFaRate')} stroke="#ffc658" strokeWidth={2} activeDot={{ r: 6 }} dot={{ r: 3 }} />
-                <Line type="monotone" dataKey="audioFalseAlarmRate" name={t('history.audioFaRate')} stroke="#ff8042" strokeWidth={2} activeDot={{ r: 6 }} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="visualFalseAlarmRate" name={t('history.visualFaRate')} stroke="#ffc658" strokeWidth={2} activeDot={{ r: 6 }} dot={{ r: 3 }} legendType="none" />
+                <Line type="monotone" dataKey="audioFalseAlarmRate" name={t('history.audioFaRate')} stroke="#ff8042" strokeWidth={2} activeDot={{ r: 6 }} dot={{ r: 3 }} legendType="none" />
               </LineChart>
-            </ResponsiveContainer>
-          </Card>
+            </Card>
+          </div>
+        </div>
+
+        <div className="chart-wrapper">
+          <div className="chart-header">
+            <h2 className="page-subtitle">
+              <Sliders size={22} />
+              {t('history.difficultyProgression')}
+            </h2>
+            <div className="custom-legend">
+              <div className="legend-item"><span className="legend-color-box" style={{ backgroundColor: '#ff79c6' }}></span>{t('history.nLevel')}</div>
+              <div className="legend-item"><span className="legend-color-box" style={{ backgroundColor: '#bd93f9' }}></span>{t('history.sessionLength')}</div>
+              <div className="legend-item"><span className="legend-color-box" style={{ backgroundColor: '#ffb86c' }}></span>{t('history.speed')}</div>
+            </div>
+          </div>
+          <div className="chart-container">
+            <Card className="chart-card">
+              {resetDateTracker()}
+              <ComposedChart width={dynamicChartWidth} height={300} data={chartData} margin={{ top: 20, right: 20, left: 0, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--hover-color)" />
+              <XAxis dataKey="date" stroke="var(--text-color)" interval={0} angle={-30} textAnchor="end" height={70} tickFormatter={formatXAxis} />
+                <YAxis yAxisId="left" label={{ value: 'N-Level / Length', angle: -90, position: 'insideLeft', fill: 'var(--text-color)' }} stroke="var(--text-color)" />
+                <YAxis yAxisId="right" orientation="right" label={{ value: 'Speed (ms)', angle: 90, position: 'insideRight', fill: 'var(--text-color)' }} stroke="var(--text-color)" />
+                <Tooltip
+                  formatter={tooltipValueFormatter}
+                  contentStyle={{
+                    backgroundColor: 'var(--sidebar-color)',
+                    borderColor: 'var(--hover-color)',
+                  }}
+                />
+                <Bar yAxisId="left" dataKey="nLevel" name={t('history.nLevel')} fill="#ff79c6" legendType="none" />
+                <Bar yAxisId="left" dataKey="sessionLength" name={t('history.sessionLength')} fill="#bd93f9" legendType="none" />
+                <Line yAxisId="right" type="monotone" dataKey="speed" name={t('history.speed')} stroke="#ffb86c" legendType="none" />
+              </ComposedChart>
+            </Card>
+          </div>
         </div>
       </div>
-
-
-      <h2 className="page-subtitle">
-        <Sliders size={22} />
-        {t('history.difficultyProgression')}
-      </h2>
-      <Card className="chart-card">
-        <ResponsiveContainer width="100%" height={300}>
-          <ComposedChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--hover-color)" />
-            <XAxis dataKey="date" stroke="var(--text-color)" />
-            <YAxis yAxisId="left" label={{ value: 'N-Level / Length', angle: -90, position: 'insideLeft', fill: 'var(--text-color)' }} stroke="var(--text-color)" />
-            <YAxis yAxisId="right" orientation="right" label={{ value: 'Speed (ms)', angle: 90, position: 'insideRight', fill: 'var(--text-color)' }} stroke="var(--text-color)" />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: 'var(--sidebar-color)',
-                borderColor: 'var(--hover-color)',
-              }}
-            />
-            <Legend />
-            <Bar yAxisId="left" dataKey="nLevel" name={t('history.nLevel')} fill="#ff79c6" />
-            <Bar yAxisId="left" dataKey="sessionLength" name={t('history.sessionLength')} fill="#bd93f9" />
-            <Line yAxisId="right" type="monotone" dataKey="speed" name={t('history.speed')} stroke="#ffb86c" />
-          </ComposedChart>
-        </ResponsiveContainer>
-      </Card>
 
       <h2 className="page-subtitle">
         <HistoryIcon size={22} />
