@@ -56,6 +56,8 @@ const GamePage: React.FC = () => {
   const [hasRespondedAudio, setHasRespondedAudio] = useState(false);
   const [positionFeedback, setPositionFeedback] = useState<FeedbackState>(null);
   const [audioFeedback, setAudioFeedback] = useState<FeedbackState>(null);
+  const [positionMissed, setPositionMissed] = useState(false);
+  const [audioMissed, setAudioMissed] = useState(false);
 
   // --- Debugging Effect ---
   useEffect(() => {
@@ -93,6 +95,25 @@ const GamePage: React.FC = () => {
     }
   }, [gameState?.currentTurnIndex, gameState?.isRunning]); // Depend on turn index and running state
 
+  // --- Missed Feedback Effect ---
+  useEffect(() => {
+    let posTimer: number;
+    let audTimer: number;
+    const animationDuration = gameState ? gameState.settings.speed_ms / 2 : 500;
+
+    if (positionMissed) {
+      posTimer = setTimeout(() => setPositionMissed(false), animationDuration);
+    }
+    if (audioMissed) {
+      audTimer = setTimeout(() => setAudioMissed(false), animationDuration);
+    }
+
+    return () => {
+      clearTimeout(posTimer);
+      clearTimeout(audTimer);
+    };
+  }, [positionMissed, audioMissed, gameState]);
+
   // --- Game Loop Effect ---
   useEffect(() => {
     if (!gameState || !gameState.isRunning) {
@@ -103,6 +124,16 @@ const GamePage: React.FC = () => {
 
     const timerId = setTimeout(async () => {
       try {
+        // --- Missed Match Detection ---
+        if (gameState.currentTurnIndex > 0) {
+          if (gameState.correctVisualMatch && !userInputRef.current.position_match) {
+            setPositionMissed(true);
+          }
+          if (gameState.correctAudioMatch && !userInputRef.current.audio_match) {
+            setAudioMissed(true);
+          }
+        }
+        
         // Submit the input for the current turn.
         await invoke('submit_user_input', { userInput: userInputRef.current });
         userInputRef.current = { position_match: false, audio_match: false };
@@ -119,16 +150,12 @@ const GamePage: React.FC = () => {
           setAudioFeedback(null);
         } else {
           // The game is over. The backend has sent the final stats.
-          // We stop the game loop immediately by setting isRunning to false.
-          // The UI will continue to show the last stimulus because we haven't updated the turn index yet.
           setGameState(s => s ? { ...s, isRunning: false } : null);
 
-          // We wait for the duration of the last stimulus to pass.
           setTimeout(() => {
-            // Now, we update the state with the final stats from the backend and trigger the post-game view.
             setGameState(newState);
             setIsPostGame(true);
-          }, gameSpeed); // Use the speed from the turn that just finished.
+          }, gameSpeed);
         }
       } catch (error) {
         console.error("Failed to advance turn:", error);
@@ -251,6 +278,9 @@ const GamePage: React.FC = () => {
           audioDisabled={hasRespondedAudio}
           positionFeedback={positionFeedback}
           audioFeedback={audioFeedback}
+          positionMissed={positionMissed}
+          audioMissed={audioMissed}
+          animationDuration={gameState.settings.speed_ms / 2}
         />
       </>
     );

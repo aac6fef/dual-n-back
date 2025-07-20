@@ -1,8 +1,11 @@
 .game-controls-container {
   display: flex;
   justify-content: center;
+  align-items: center;
   gap: 1rem;
   margin-top: 1.5rem;
+  position: relative;
+  height: 60px; /* Ensure container has height for absolute positioning */
 }
 
 .btn-correct {
@@ -29,5 +32,44 @@
   100% {
     transform: scale(1);
     opacity: 1;
+  }
+}
+
+.missed-feedback-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px; /* Match icon size */
+  height: 24px; /* Match icon size */
+}
+
+.missed-feedback-placeholder {
+  width: 24px; /* Match icon size */
+  height: 24px; /* Match icon size */
+}
+
+.missed-feedback-icon {
+  color: #dc3545; /* Red color for error */
+  animation-name: fade-in-out;
+  animation-timing-function: ease-in-out;
+  animation-fill-mode: forwards;
+}
+
+@keyframes fade-in-out {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  20% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  80% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.8);
   }
 }
