@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { invoke } from '@tauri-apps/api/core';
 import {
   LineChart,
@@ -15,7 +16,16 @@ import {
   ReferenceLine,
   Label,
 } from 'recharts';
-import { BarChart3, History as HistoryIcon, Sliders, ChevronRight } from 'lucide-react';
+import {
+  BarChart3,
+  History as HistoryIcon,
+  Sliders,
+  ChevronRight,
+  Target,
+  AlertTriangle,
+  Calendar,
+  BrainCircuit,
+} from 'lucide-react';
 import Card from '../components/ui/Card';
 import './HistoryPage.css';
 
@@ -33,7 +43,8 @@ interface UserSettings {
   session_length: number;
 }
 
-interface GameSession {
+// This is the SUMMARY object from the backend
+interface GameSessionSummary {
   id: string;
   timestamp: string; // ISO 8601 string
   settings: UserSettings;
@@ -54,8 +65,9 @@ const calculateFalseAlarmRate = (stats: AccuracyStats): number => {
   return (stats.false_positives / totalNonMatches) * 100;
 };
 
-const transformHistoryData = (sessions: GameSession[]) => {
+const transformHistoryData = (sessions: GameSessionSummary[]) => {
   return sessions.map(session => ({
+    id: session.id,
     date: new Date(session.timestamp).toLocaleDateString(),
     nLevel: session.settings.n_level,
     speed: session.settings.speed_ms,
@@ -69,17 +81,17 @@ const transformHistoryData = (sessions: GameSession[]) => {
 
 const HistoryPage: React.FC = () => {
   const { t } = useTranslation();
-  const [history, setHistory] = useState<GameSession[]>([]);
+  const [history, setHistory] = useState<GameSessionSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchHistory = async () => {
       setIsLoading(true);
       try {
-        const fetchedHistory = await invoke<GameSession[]>('get_game_history');
-        // Sort by timestamp ascending for chart
-        fetchedHistory.sort((a: GameSession, b: GameSession) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
-        setHistory(fetchedHistory);
+        const fetchedHistory = await invoke<GameSessionSummary[]>('get_game_history');
+        // Sort by timestamp ascending for chart view
+        const sortedForChart = [...fetchedHistory].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+        setHistory(sortedForChart);
       } catch (error) {
         console.error("Failed to fetch game history:", error);
       } finally {
@@ -115,58 +127,67 @@ const HistoryPage: React.FC = () => {
     <div className="history-container">
       <h1 className="page-title">{t('history.title')}</h1>
 
-      <h2 className="page-subtitle">
-        <BarChart3 size={22} />
-        {t('history.progressChart')}
-      </h2>
-      <Card className="chart-card">
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--hover-color)" />
-            <XAxis dataKey="date" stroke="var(--text-color)" />
-            <YAxis stroke="var(--text-color)" domain={[50, 100]} />
-            <Tooltip
-              contentStyle={{
-                backgroundColor: 'var(--sidebar-color)',
-                borderColor: 'var(--hover-color)',
-              }}
-            />
-            <Legend />
-            {nLevelChangePoints.map((p, i) => (
-              <ReferenceLine
-                key={i}
-                x={p.x}
-                stroke="var(--accent-color)"
-                strokeDasharray="3 3"
-              >
-                <Label value={`N=${p.nLevel}`} position="insideTopRight" fill="var(--accent-color)" fontSize={12} />
-              </ReferenceLine>
-            ))}
-            <Line
-              type="monotone"
-              dataKey="visualHitRate"
-              name={t('history.visualHitRate', 'V. Hit Rate')}
-              stroke="#8884d8"
-              strokeWidth={2}
-              activeDot={{ r: 8 }}
-              dot={{ r: 4 }}
-            />
-            <Line
-              type="monotone"
-              dataKey="audioHitRate"
-              name={t('history.audioHitRate', 'A. Hit Rate')}
-              stroke="#82ca9d"
-              strokeWidth={2}
-              activeDot={{ r: 8 }}
-              dot={{ r: 4 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </Card>
+      <div className="charts-grid">
+        <div className="chart-container">
+          <h2 className="page-subtitle">
+            <Target size={22} />
+            {t('history.hitRateChart')}
+          </h2>
+          <Card className="chart-card">
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--hover-color)" />
+                <XAxis dataKey="date" stroke="var(--text-color)" />
+                <YAxis stroke="var(--text-color)" domain={[50, 100]} unit="%" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'var(--sidebar-color)',
+                    borderColor: 'var(--hover-color)',
+                  }}
+                />
+                <Legend />
+                {nLevelChangePoints.map((p, i) => (
+                  <ReferenceLine key={i} x={p.x} stroke="var(--accent-color)" strokeDasharray="3 3">
+                    <Label value={`N=${p.nLevel}`} position="insideTopRight" fill="var(--accent-color)" fontSize={12} />
+                  </ReferenceLine>
+                ))}
+                <Line type="monotone" dataKey="visualHitRate" name={t('history.visualHitRate')} stroke="#8884d8" strokeWidth={2} activeDot={{ r: 6 }} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="audioHitRate" name={t('history.audioHitRate')} stroke="#82ca9d" strokeWidth={2} activeDot={{ r: 6 }} dot={{ r: 3 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </Card>
+        </div>
+
+        <div className="chart-container">
+          <h2 className="page-subtitle">
+            <AlertTriangle size={22} />
+            {t('history.falseAlarmChart')}
+          </h2>
+          <Card className="chart-card">
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--hover-color)" />
+                <XAxis dataKey="date" stroke="var(--text-color)" />
+                <YAxis stroke="var(--text-color)" domain={[0, 25]} unit="%" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'var(--sidebar-color)',
+                    borderColor: 'var(--hover-color)',
+                  }}
+                />
+                <Legend />
+                <Line type="monotone" dataKey="visualFalseAlarmRate" name={t('history.visualFaRate')} stroke="#ffc658" strokeWidth={2} activeDot={{ r: 6 }} dot={{ r: 3 }} />
+                <Line type="monotone" dataKey="audioFalseAlarmRate" name={t('history.audioFaRate')} stroke="#ff8042" strokeWidth={2} activeDot={{ r: 6 }} dot={{ r: 3 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </Card>
+        </div>
+      </div>
+
 
       <h2 className="page-subtitle">
         <Sliders size={22} />
-        {t('history.difficultySettings')}
+        {t('history.difficultyProgression')}
       </h2>
       <Card className="chart-card">
         <ResponsiveContainer width="100%" height={300}>
@@ -194,26 +215,38 @@ const HistoryPage: React.FC = () => {
         {t('history.sessionHistory')}
       </h2>
       <div className="session-list">
-        {chartData.slice().reverse().map((session, index) => (
-          <Card key={index} className="session-card">
-            <div className="session-info">
-              <span className="session-date">{session.date}</span>
-              <span className="session-nlevel">{t('history.nLevel')}: {session.nLevel}</span>
-            </div>
-            <div className="session-scores">
-              <div className="score-group">
-                <span className="score-label">{t('history.visual')}</span>
-                <span className="score-value">{t('history.hitRate')}: {session.visualHitRate.toFixed(1)}%</span>
-                <span className="score-value">{t('history.faRate')}: {session.visualFalseAlarmRate.toFixed(1)}%</span>
+        {chartData.slice().reverse().map((session) => (
+          <Link to={`/history/${session.id}`} key={session.id} className="session-link">
+            <Card className="session-card">
+              <div className="session-summary">
+                <div className="summary-item">
+                  <Calendar size={18} />
+                  <span>{session.date}</span>
+                </div>
+                <div className="summary-item">
+                  <BrainCircuit size={18} />
+                  <span>{t('history.nLevel')}: {session.nLevel}</span>
+                </div>
               </div>
-              <div className="score-group">
-                <span className="score-label">{t('history.audio')}</span>
-                <span className="score-value">{t('history.hitRate')}: {session.audioHitRate.toFixed(1)}%</span>
-                <span className="score-value">{t('history.faRate')}: {session.audioFalseAlarmRate.toFixed(1)}%</span>
+              <div className="session-scores">
+                <div className="score-group">
+                  <span className="score-label">{t('history.visual')}</span>
+                  <div className="score-values">
+                    <span className="score-value"><Target size={14} /> {session.visualHitRate.toFixed(1)}%</span>
+                    <span className="score-value"><AlertTriangle size={14} /> {session.visualFalseAlarmRate.toFixed(1)}%</span>
+                  </div>
+                </div>
+                <div className="score-group">
+                  <span className="score-label">{t('history.audio')}</span>
+                  <div className="score-values">
+                    <span className="score-value"><Target size={14} /> {session.audioHitRate.toFixed(1)}%</span>
+                    <span className="score-value"><AlertTriangle size={14} /> {session.audioFalseAlarmRate.toFixed(1)}%</span>
+                  </div>
+                </div>
               </div>
-            </div>
-            <ChevronRight className="session-arrow" size={24} />
-          </Card>
+              <ChevronRight className="session-arrow" size={24} />
+            </Card>
+          </Link>
         ))}
       </div>
     </div>

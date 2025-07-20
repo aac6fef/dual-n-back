@@ -1,0 +1,48 @@
+.color-grid-legend {
+  display: grid;
+  grid-template-columns: repeat(3, 40px);
+  grid-template-rows: repeat(3, 40px);
+  gap: 5px;
+  margin-bottom: 1rem;
+}
+
+.legend-grid-cell {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: var(--border-radius-medium);
+  font-weight: bold;
+  font-size: 1rem;
+}
+
+/* Match colors from HistoryDetailPage.css */
+.legend-grid-cell.cell-0 { background-color: #F7768E; }
+.legend-grid-cell.cell-1 { background-color: #7DCFFF; }
+.legend-grid-cell.cell-2 { background-color: #9ECE6A; }
+.legend-grid-cell.cell-3 { background-color: #BB9AF7; }
+.legend-grid-cell.cell-4 { background-color: #FF9E64; }
+.legend-grid-cell.cell-5 { background-color: #73DACA; }
+.legend-grid-cell.cell-6 { background-color: #C0CAF5; }
+.legend-grid-cell.cell-7 { background-color: #F7C47F; }
+.legend-grid-cell.cell-8 { background-color: #7AA2F7; }
+
+/* Text color contrast */
+.legend-grid-cell.cell-0,
+.legend-grid-cell.cell-1,
+.legend-grid-cell.cell-3,
+.legend-grid-cell.cell-4,
+.legend-grid-cell.cell-8 {
+  color: #1a1b26; /* Dark text for light backgrounds */
+}
+
+.legend-grid-cell.cell-2,
+.legend-grid-cell.cell-5,
+.legend-grid-cell.cell-6,
+.legend-grid-cell.cell-7 {
+  color: #1a1b26; /* Dark text for light backgrounds */
+}
+
+/* Adjusting for very light colors if needed */
+.legend-grid-cell.cell-6 {
+    color: #24283b;
+}

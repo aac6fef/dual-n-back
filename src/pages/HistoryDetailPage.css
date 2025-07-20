@@ -1,0 +1,235 @@
+.history-detail-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding-bottom: 2rem;
+}
+
+.detail-summary-card {
+  display: flex;
+  justify-content: space-around;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.summary-item {
+  flex-basis: 200px;
+  text-align: center;
+}
+
+.stats-card {
+  display: flex;
+  justify-content: space-around;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.stats-column {
+  flex-basis: 300px;
+}
+
+.stats-title {
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid var(--hover-color);
+}
+
+.stat-item:last-child {
+  border-bottom: none;
+}
+
+.stat-item span:last-child {
+  font-weight: bold;
+}
+
+.legends-card {
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.legend-title {
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  font-size: 1.2rem;
+}
+
+.legends-container {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-start;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.legend-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.legend-subtitle {
+  margin: 0 0 0.5rem 0;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-color);
+  opacity: 0.9;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.legend-box {
+  width: 25px;
+  height: 25px;
+  border-radius: var(--border-radius-medium);
+}
+
+.legend-box.match {
+  border: 3px solid var(--accent-color);
+}
+
+.legend-text {
+  font-weight: bold;
+}
+
+.sequence-card {
+  padding: 1.5rem;
+}
+
+.sequence-header,
+.event-item {
+  display: grid;
+  grid-template-columns: 50px 1fr 1fr;
+  align-items: center;
+  text-align: center;
+  padding: 0.5rem 0;
+}
+
+.sequence-header {
+  font-weight: bold;
+  font-size: 1.2rem;
+  border-bottom: 2px solid var(--hover-color);
+  margin-bottom: 0.5rem;
+}
+
+.event-item {
+  border-bottom: 1px solid var(--hover-color);
+}
+
+.event-item:last-child {
+  border-bottom: none;
+}
+
+.event-index {
+  font-weight: 500;
+  color: #a9b1d6;
+}
+
+.event-stimulus {
+  padding: 0.5rem;
+  border-radius: var(--border-radius-medium);
+  border: 2px solid transparent;
+  margin: 0 auto;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.audio-stimulus {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.event-stimulus.match {
+  border-color: var(--accent-color);
+}
+
+.user-click-audio {
+  text-decoration: underline;
+  text-decoration-color: var(--accent-color);
+  text-decoration-thickness: 3px;
+  text-underline-offset: 6px;
+}
+
+.user-click-visual {
+  text-decoration: underline;
+  text-decoration-thickness: 3px;
+  text-underline-offset: 4px;
+  /* The color will be inherited from the parent .grid-cell-detail */
+}
+
+/* Visual stimulus grid cell */
+.grid-cell-detail {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--border-radius-medium);
+  background-color: var(--hover-color); /* Default non-active color */
+  transition: background-color 0.2s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  /* Default color is set per-cell for contrast */
+}
+
+.grid-cell-detail.active-cell-detail {
+  background-color: var(--panel-bg);
+  position: relative;
+}
+
+/* Removed the ::before pseudo-element for underlining */
+
+
+/* Colors for visual stimulus, matching GamePage */
+.cell-0.active-cell-detail { background-color: #F7768E; color: #1a1b26; }
+.cell-1.active-cell-detail { background-color: #7DCFFF; color: #1a1b26; }
+.cell-2.active-cell-detail { background-color: #9ECE6A; color: #1a1b26; }
+.cell-3.active-cell-detail { background-color: #BB9AF7; color: #1a1b26; }
+.cell-4.active-cell-detail { background-color: #FF9E64; color: #1a1b26; }
+.cell-5.active-cell-detail { background-color: #73DACA; color: #1a1b26; }
+.cell-6.active-cell-detail { background-color: #C0CAF5; color: #24283b; }
+.cell-7.active-cell-detail { background-color: #F7C47F; color: #1a1b26; }
+.cell-8.active-cell-detail { background-color: #7AA2F7; color: #1a1b26; }
+
+/* The underline color is now automatically handled by text-decoration inheriting the span's color. */
+
+@media (max-width: 768px) {
+  .detail-summary-card {
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+  }
+  .detail-summary-card .summary-item {
+    flex-basis: auto;
+    width: 100%;
+  }
+  .stats-card {
+    flex-direction: column;
+    align-items: center;
+  }
+  .stats-column {
+    width: 100%;
+  }
+}

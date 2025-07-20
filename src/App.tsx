@@ -12,6 +12,7 @@ import "./App.css";
 import GamePage from "./pages/GamePage";
 import SettingsPage from "./pages/SettingsPage";
 import HistoryPage from "./pages/HistoryPage";
+import HistoryDetailPage from "./pages/HistoryDetailPage";
 
 const Layout = () => {
   const { t } = useTranslation();
@@ -62,6 +63,7 @@ function App() {
             <Route index element={<GamePage />} />
             <Route path="settings" element={<SettingsPage />} />
             <Route path="history" element={<HistoryPage />} />
+            <Route path="history/:sessionId" element={<HistoryDetailPage />} />
           </Route>
         </Routes>
       </HashRouter>

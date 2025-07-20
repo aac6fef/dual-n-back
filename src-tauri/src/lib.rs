@@ -3,10 +3,10 @@ mod persistence;
 pub mod sequence_generator;
 
 use chrono::Duration;
-use game::{AccuracyStats, AppState, GameState, GameTurn, UserInput};
+use game::{AccuracyStats, AppState, GameEvent, GameState, Stimulus, UserResponse};
 use persistence::{
-    clear_all_data, load_all_sessions, load_settings, save_session, save_settings, DbState,
-    GameSession, UserSettings,
+    clear_all_data, load_all_sessions, load_session_by_id, load_settings, save_session,
+    save_settings, DbState, GameSession, GameSessionSummary, UserSettings,
 };
 use rand::prelude::*;
 use serde::Serialize;
@@ -17,7 +17,7 @@ use tauri::{Manager, State};
 // without altering the core game logic's internal state representation.
 
 #[derive(Serialize, Clone)]
-struct FrontendGameTurn {
+struct FrontendStimulus {
     visual_stimulus: VisualStimulus,
     audio_stimulus: AudioStimulus,
 }
@@ -32,11 +32,15 @@ struct AudioStimulus {
     letter: char,
 }
 
-impl From<&GameTurn> for FrontendGameTurn {
-    fn from(turn: &GameTurn) -> Self {
+impl From<&Stimulus> for FrontendStimulus {
+    fn from(stimulus: &Stimulus) -> Self {
         Self {
-            visual_stimulus: VisualStimulus { position: turn.visual },
-            audio_stimulus: AudioStimulus { letter: turn.audio },
+            visual_stimulus: VisualStimulus {
+                position: stimulus.visual,
+            },
+            audio_stimulus: AudioStimulus {
+                letter: stimulus.audio,
+            },
         }
     }
 }
@@ -45,16 +49,16 @@ impl From<&GameTurn> for FrontendGameTurn {
 #[serde(rename_all = "camelCase")]
 struct FrontendGameState {
     is_running: bool,
-    settings: UserSettings, // Pass the whole settings object
+    settings: UserSettings,
     current_turn_index: usize,
-    current_turn: Option<FrontendGameTurn>,
+    current_stimulus: Option<FrontendStimulus>,
     visual_hit_rate: f32,
     visual_false_alarm_rate: f32,
     audio_hit_rate: f32,
     audio_false_alarm_rate: f32,
     // Add correct answers for the current turn for immediate feedback
-    correct_visual_match: bool,
-    correct_audio_match: bool,
+    is_visual_match: bool,
+    is_audio_match: bool,
 }
 
 impl From<&GameState> for FrontendGameState {
@@ -62,14 +66,18 @@ impl From<&GameState> for FrontendGameState {
         let n = state.settings.n_level;
         let idx = state.current_turn_index;
 
-        let mut correct_visual_match = false;
-        let mut correct_audio_match = false;
+        let mut is_visual_match = false;
+        let mut is_audio_match = false;
 
-        if idx >= n {
-            if let Some(current_turn) = state.turn_history.get(idx) {
-                if let Some(target_turn) = state.turn_history.get(idx - n) {
-                    correct_visual_match = current_turn.visual == target_turn.visual;
-                    correct_audio_match = current_turn.audio == target_turn.audio;
+        // Determine if the upcoming turn is a match
+        if state.is_running && idx >= n {
+            if let Some(current_stimulus) = state.peek_stimulus() {
+                // The event history contains the processed turns. The last event is idx-1.
+                // We need to compare the upcoming stimulus (at idx) with the stimulus from n turns ago (at idx-n).
+                // The stimulus at idx-n is stored in the event at index idx-n.
+                if let Some(target_event) = state.event_history.get(idx - n) {
+                    is_visual_match = current_stimulus.visual == target_event.stimulus.visual;
+                    is_audio_match = current_stimulus.audio == target_event.stimulus.audio;
                 }
             }
         }
@@ -78,13 +86,13 @@ impl From<&GameState> for FrontendGameState {
             is_running: state.is_running,
             settings: state.settings.clone(),
             current_turn_index: state.current_turn_index,
-            current_turn: state.turn_history.last().map(FrontendGameTurn::from),
+            current_stimulus: state.peek_stimulus().as_ref().map(FrontendStimulus::from),
             visual_hit_rate: state.visual_stats.calculate_hit_rate(),
             visual_false_alarm_rate: state.visual_stats.calculate_false_alarm_rate(),
             audio_hit_rate: state.audio_stats.calculate_hit_rate(),
             audio_false_alarm_rate: state.audio_stats.calculate_false_alarm_rate(),
-            correct_visual_match,
-            correct_audio_match,
+            is_visual_match,
+            is_audio_match,
         }
     }
 }
@@ -143,59 +151,34 @@ async fn generate_fake_history(db_state: State<'_, DbState>) -> Result<(), Strin
     tauri::async_runtime::spawn(async move {
         let mut rng = thread_rng();
         for i in 0..15 {
-        let settings = UserSettings {
-            n_level: rng.gen_range(2..=5),
-            speed_ms: rng.gen_range(1500..=3000),
-            session_length: rng.gen_range(20..=50),
-        };
+            let settings = UserSettings {
+                n_level: rng.gen_range(2..=4),
+                speed_ms: rng.gen_range(2000..=3000),
+                session_length: rng.gen_range(20..=30),
+            };
 
-        let (audio_sequence, visual_sequence) =
-            sequence_generator::generate_dual_nback_sequences(
-                settings.n_level,
-                settings.session_length,
+            // Create a temporary game state to generate a valid session
+            let mut temp_game = GameState::new(settings.clone());
+            temp_game.is_running = true;
+
+            while temp_game.is_running {
+                // Simulate user input with some randomness
+                let user_response = UserResponse {
+                    visual_match: rng.gen_bool(0.2), // 20% chance of pressing the button
+                    audio_match: rng.gen_bool(0.2),
+                };
+                temp_game.process_turn(user_response);
+            }
+
+            let mut session = GameSession::new(
+                settings,
+                temp_game.event_history,
+                temp_game.visual_stats,
+                temp_game.audio_stats,
             );
-
-        let turn_history: Vec<GameTurn> = audio_sequence
-            .iter()
-            .zip(visual_sequence.iter())
-            .map(|(&audio, &visual)| GameTurn { audio, visual })
-            .collect();
-
-        let total_possible_audio_matches =
-            (settings.n_level..settings.session_length).fold(0, |acc, i| {
-                if turn_history[i].audio == turn_history[i - settings.n_level].audio {
-                    acc + 1
-                } else {
-                    acc
-                }
-            });
-
-        let total_possible_visual_matches =
-            (settings.n_level..settings.session_length).fold(0, |acc, i| {
-                if turn_history[i].visual == turn_history[i - settings.n_level].visual {
-                    acc + 1
-                } else {
-                    acc
-                }
-            });
-
-        let audio_stats = AccuracyStats {
-            true_positives: rng.gen_range(0..=total_possible_audio_matches),
-            false_negatives: rng.gen_range(0..=5),
-            true_negatives: rng.gen_range(10..=40),
-            false_positives: rng.gen_range(0..=5),
-        };
-
-        let visual_stats = AccuracyStats {
-            true_positives: rng.gen_range(0..=total_possible_visual_matches),
-            false_negatives: rng.gen_range(0..=5),
-            true_negatives: rng.gen_range(10..=40),
-            false_positives: rng.gen_range(0..=5),
-        };
-
-        let mut session =
-            GameSession::new(settings, turn_history, visual_stats, audio_stats);
-        session.timestamp = session.timestamp - Duration::days(i);
+            
+            // Backdate the session
+            session.timestamp = session.timestamp - Duration::days(i);
 
             if let Err(e) = save_session(&db, &session) {
                 eprintln!("Failed to save generated session: {}", e);
@@ -208,17 +191,26 @@ async fn generate_fake_history(db_state: State<'_, DbState>) -> Result<(), Strin
 
 // --- Game History Commands ---
 #[tauri::command]
-fn get_game_history(db_state: State<DbState>) -> Result<Vec<GameSession>, String> {
+fn get_game_history(db_state: State<DbState>) -> Result<Vec<GameSessionSummary>, String> {
     let db = db_state.0.lock().unwrap();
     load_all_sessions(&db).map_err(|e| e.to_string())
 }
 
 #[tauri::command]
+fn get_session_details(
+    db_state: State<DbState>,
+    session_id: String,
+) -> Result<Option<GameSession>, String> {
+    let db = db_state.0.lock().unwrap();
+    load_session_by_id(&db, &session_id).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 fn export_history_as_csv(db_state: State<DbState>) -> Result<String, String> {
     let db = db_state.0.lock().unwrap();
-    let sessions = load_all_sessions(&db).map_err(|e| e.to_string())?;
+    let summaries = load_all_sessions(&db).map_err(|e| e.to_string())?;
 
-    let records: Vec<CsvRecord> = sessions.into_iter().map(|s| CsvRecord {
+    let records: Vec<CsvRecord> = summaries.into_iter().map(|s| CsvRecord {
         timestamp: s.timestamp.to_rfc3339(),
         n_level: s.settings.n_level,
         speed_ms: s.settings.speed_ms,
@@ -248,39 +240,36 @@ fn export_history_as_csv(db_state: State<DbState>) -> Result<String, String> {
 fn start_game(app_state: State<AppState>) {
     let mut game_state = app_state.0.lock().unwrap();
     
-    // Create a new game state using the settings already in memory.
-    // This ensures that any changes made in the settings page are immediately reflected.
     let mut settings = game_state.settings.clone();
-    if settings.session_length < 20 {
-        settings.session_length = 20; // Enforce minimum length
+    if settings.session_length < 10 {
+        settings.session_length = 10; // Enforce minimum length
+    }
+    if settings.session_length > 100 {
+        settings.session_length = 100; // Enforce maximum length
     }
 
     *game_state = GameState::new(settings);
     game_state.is_running = true;
-    
-    // Perform the first tick to load the first stimulus into history
-    game_state.tick();
 }
 
 #[tauri::command]
-fn submit_user_input(app_state: State<AppState>, db_state: State<DbState>, user_input: UserInput) {
+fn submit_user_input(
+    app_state: State<AppState>,
+    db_state: State<DbState>,
+    user_response: UserResponse,
+) {
     let mut game_state = app_state.0.lock().unwrap();
     if !game_state.is_running {
         return;
     }
 
-    // Process the user's input for the turn that was just displayed
-    game_state.process_input(&user_input);
+    game_state.process_turn(user_response);
 
-    // Prepare the next turn. Tick will set is_running to false if the session is now over.
-    game_state.tick();
-
-    // If the game has just stopped after the tick, save the session.
+    // If the game has just stopped, save the session.
     if !game_state.is_running {
-        // We need to clone the stats *before* the game_state is dropped.
         let session = GameSession::new(
             game_state.settings.clone(),
-            game_state.turn_history.clone(),
+            game_state.event_history.clone(),
             game_state.visual_stats.clone(),
             game_state.audio_stats.clone(),
         );
@@ -330,6 +319,7 @@ pub fn run() {
             load_user_settings,
             save_user_settings,
             get_game_history,
+            get_session_details,
             export_history_as_csv,
             reset_all_data,
             generate_fake_history

@@ -13,7 +13,7 @@ import { InfoPanel, Stat } from '../components/InfoPanel';
 import './GamePage.css';
 
 // --- Data Structures mirroring Rust backend ---
-interface GameTurn {
+interface FrontendStimulus {
   visual_stimulus: { position: number };
   audio_stimulus: { letter: string };
 }
@@ -29,17 +29,17 @@ interface GameState {
   isRunning: boolean;
   settings: UserSettings;
   currentTurnIndex: number;
-  currentTurn: GameTurn | null;
+  currentStimulus: FrontendStimulus | null;
   visualHitRate: number;
   visualFalseAlarmRate: number;
   audioHitRate: number;
   audioFalseAlarmRate: number;
-  correctVisualMatch: boolean;
-  correctAudioMatch: boolean;
+  isVisualMatch: boolean;
+  isAudioMatch: boolean;
 }
 
-interface UserInput {
-  position_match: boolean;
+interface UserResponse {
+  visual_match: boolean;
   audio_match: boolean;
 }
 
@@ -49,7 +49,8 @@ const GamePage: React.FC = () => {
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isPostGame, setIsPostGame] = useState(false); // State to manage post-game summary view
-  const userInputRef = useRef<UserInput>({ position_match: false, audio_match: false });
+  const userResponseRef = useRef<UserResponse>({ visual_match: false, audio_match: false });
+  const previousMatchStatusRef = useRef({ isVisualMatch: false, isAudioMatch: false });
   
   // State for immediate feedback
   const [hasRespondedVisual, setHasRespondedVisual] = useState(false);
@@ -62,8 +63,8 @@ const GamePage: React.FC = () => {
   // --- Debugging Effect ---
   useEffect(() => {
     if (gameState && gameState.isRunning) {
-      const visual = gameState.currentTurn?.visual_stimulus.position;
-      const audio = gameState.currentTurn?.audio_stimulus.letter;
+      const visual = gameState.currentStimulus?.visual_stimulus.position;
+      const audio = gameState.currentStimulus?.audio_stimulus.letter;
       console.log(
         `Turn ${gameState.currentTurnIndex}: Visual Stimulus -> ${visual ?? 'N/A'}, Audio Stimulus -> ${audio ?? 'N/A'}`
       );
@@ -74,7 +75,7 @@ const GamePage: React.FC = () => {
   useEffect(() => {
     // Only play sounds if the game is actively running.
     if (gameState && gameState.isRunning) {
-      const letter = gameState.currentTurn?.audio_stimulus.letter;
+      const letter = gameState.currentStimulus?.audio_stimulus.letter;
       if (letter) {
         const playSound = () => {
           try {
@@ -93,7 +94,7 @@ const GamePage: React.FC = () => {
         playSound();
       }
     }
-  }, [gameState?.currentTurnIndex, gameState?.isRunning]); // Depend on turn index and running state
+  }, [gameState?.currentStimulus, gameState?.isRunning]); // Depend on the stimulus object
 
   // --- Missed Feedback Effect ---
   useEffect(() => {
@@ -120,23 +121,30 @@ const GamePage: React.FC = () => {
       return;
     }
 
+    // Store the match status for the current turn before the timer starts.
+    // This will be used to check for misses after the turn ends.
+    previousMatchStatusRef.current = {
+      isVisualMatch: gameState.isVisualMatch,
+      isAudioMatch: gameState.isAudioMatch,
+    };
+
     const gameSpeed = gameState.settings.speed_ms;
 
     const timerId = setTimeout(async () => {
       try {
-        // --- Missed Match Detection ---
+        // --- Missed Match Detection for the turn that just finished ---
         if (gameState.currentTurnIndex > 0) {
-          if (gameState.correctVisualMatch && !userInputRef.current.position_match) {
+          if (previousMatchStatusRef.current.isVisualMatch && !userResponseRef.current.visual_match) {
             setPositionMissed(true);
           }
-          if (gameState.correctAudioMatch && !userInputRef.current.audio_match) {
+          if (previousMatchStatusRef.current.isAudioMatch && !userResponseRef.current.audio_match) {
             setAudioMissed(true);
           }
         }
-        
+
         // Submit the input for the current turn.
-        await invoke('submit_user_input', { userInput: userInputRef.current });
-        userInputRef.current = { position_match: false, audio_match: false };
+        await invoke('submit_user_input', { userResponse: userResponseRef.current });
+        userResponseRef.current = { visual_match: false, audio_match: false };
 
         // Get the state for the *next* turn.
         const newState = await invoke<GameState>('get_game_state');
@@ -173,7 +181,7 @@ const GamePage: React.FC = () => {
       await invoke('start_game');
       const newState = await invoke<GameState>('get_game_state');
       setGameState(newState);
-      userInputRef.current = { position_match: false, audio_match: false };
+      userResponseRef.current = { visual_match: false, audio_match: false };
       setHasRespondedVisual(false);
       setHasRespondedAudio(false);
       setPositionFeedback(null);
@@ -188,19 +196,19 @@ const GamePage: React.FC = () => {
   const handlePositionMatch = () => {
     if (!gameState?.isRunning || hasRespondedVisual) return;
     
-    const isCorrect = gameState.correctVisualMatch;
+    const isCorrect = gameState.isVisualMatch;
     setPositionFeedback(isCorrect ? 'correct' : 'incorrect');
     setHasRespondedVisual(true);
-    userInputRef.current.position_match = true;
+    userResponseRef.current.visual_match = true;
   };
 
   const handleAudioMatch = () => {
     if (!gameState?.isRunning || hasRespondedAudio) return;
 
-    const isCorrect = gameState.correctAudioMatch;
+    const isCorrect = gameState.isAudioMatch;
     setAudioFeedback(isCorrect ? 'correct' : 'incorrect');
     setHasRespondedAudio(true);
-    userInputRef.current.audio_match = true;
+    userResponseRef.current.audio_match = true;
   };
 
   const renderGameContent = () => {
@@ -269,7 +277,7 @@ const GamePage: React.FC = () => {
         />
         <Grid
           key={gameState.currentTurnIndex}
-          activeIndex={gameState.currentTurn?.visual_stimulus.position ?? null}
+          activeIndex={gameState.currentStimulus?.visual_stimulus.position ?? null}
         />
         <GameControls
           onPositionMatch={handlePositionMatch}

@@ -3,10 +3,34 @@ use std::sync::Mutex;
 use crate::persistence::UserSettings;
 use crate::sequence_generator;
 
-#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
-pub struct GameTurn {
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
+pub struct Stimulus {
     pub visual: u8,
     pub audio: char,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
+pub struct UserResponse {
+    pub visual_match: bool,
+    pub audio_match: bool,
+}
+
+impl Default for UserResponse {
+    fn default() -> Self {
+        Self {
+            visual_match: false,
+            audio_match: false,
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct GameEvent {
+    pub turn_index: usize,
+    pub stimulus: Stimulus,
+    pub is_visual_match: bool,
+    pub is_audio_match: bool,
+    pub user_response: UserResponse,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]
@@ -51,7 +75,7 @@ impl AccuracyStats {
 pub struct GameState {
     pub settings: UserSettings,
     pub is_running: bool,
-    pub turn_history: Vec<GameTurn>,
+    pub event_history: Vec<GameEvent>,
     pub current_turn_index: usize, // How many turns have been *processed*
     pub visual_stats: AccuracyStats,
     pub audio_stats: AccuracyStats,
@@ -73,7 +97,7 @@ impl GameState {
         Self {
             settings,
             is_running: false,
-            turn_history: Vec::new(),
+            event_history: Vec::new(),
             current_turn_index: 0,
             visual_stats: AccuracyStats::default(),
             audio_stats: AccuracyStats::default(),
@@ -82,26 +106,16 @@ impl GameState {
         }
     }
 
-    pub fn tick(&mut self) {
-        if !self.is_running {
-            return;
+    /// Peeks at the next stimulus without advancing the game state.
+    pub fn peek_stimulus(&self) -> Option<Stimulus> {
+        if !self.is_running || self.current_turn_index >= self.settings.session_length {
+            return None;
         }
 
-        // Stop condition: if the number of processed turns equals the session length
-        if self.current_turn_index >= self.settings.session_length {
-            self.is_running = false;
-            return;
-        }
-
-        // Add the next pre-generated turn to the history
-        let next_turn = GameTurn {
+        Some(Stimulus {
             visual: self.visual_sequence[self.current_turn_index],
             audio: self.audio_sequence[self.current_turn_index],
-        };
-        self.turn_history.push(next_turn);
-        
-        // This index now represents the turn that was just added and is ready for input
-        // It will be incremented *after* processing
+        })
     }
 }
 
@@ -112,44 +126,62 @@ pub struct UserInput {
 }
 
 impl GameState {
-    /// Processes user input for the current turn and updates accuracy statistics.
-    pub fn process_input(&mut self, user_input: &UserInput) {
-        let turn_idx = self.current_turn_index;
-
-        // No matches are possible before the n-th turn.
-        if turn_idx < self.settings.n_level {
-            if user_input.position_match { self.visual_stats.false_positives += 1; } 
-            else { self.visual_stats.true_negatives += 1; }
-
-            if user_input.audio_match { self.audio_stats.false_positives += 1; }
-            else { self.audio_stats.true_negatives += 1; }
-            
-            self.current_turn_index += 1; // Move to next turn
+    /// Processes user input for the current turn, records the event, and updates stats.
+    pub fn process_turn(&mut self, user_response: UserResponse) {
+        if !self.is_running {
             return;
         }
+        
+        let turn_idx = self.current_turn_index;
+        let n = self.settings.n_level;
 
-        let current_turn = &self.turn_history[turn_idx];
-        let target_turn = &self.turn_history[turn_idx - self.settings.n_level];
+        let stimulus = Stimulus {
+            visual: self.visual_sequence[turn_idx],
+            audio: self.audio_sequence[turn_idx],
+        };
 
-        // --- Visual Stats ---
-        let actual_pos_match = current_turn.visual == target_turn.visual;
-        match (user_input.position_match, actual_pos_match) {
+        let mut is_visual_match = false;
+        let mut is_audio_match = false;
+
+        if turn_idx >= n {
+            let target_stimulus = Stimulus {
+                visual: self.visual_sequence[turn_idx - n],
+                audio: self.audio_sequence[turn_idx - n],
+            };
+            is_visual_match = stimulus.visual == target_stimulus.visual;
+            is_audio_match = stimulus.audio == target_stimulus.audio;
+        }
+
+        // --- Update Stats ---
+        // Visual
+        match (user_response.visual_match, is_visual_match) {
             (true, true) => self.visual_stats.true_positives += 1,
             (true, false) => self.visual_stats.false_positives += 1,
             (false, true) => self.visual_stats.false_negatives += 1,
             (false, false) => self.visual_stats.true_negatives += 1,
         }
-
-        // --- Audio Stats ---
-        let actual_audio_match = current_turn.audio == target_turn.audio;
-        match (user_input.audio_match, actual_audio_match) {
+        // Audio
+        match (user_response.audio_match, is_audio_match) {
             (true, true) => self.audio_stats.true_positives += 1,
             (true, false) => self.audio_stats.false_positives += 1,
             (false, true) => self.audio_stats.false_negatives += 1,
             (false, false) => self.audio_stats.true_negatives += 1,
         }
 
-        self.current_turn_index += 1; // Move to next turn
+        // --- Record Event ---
+        self.event_history.push(GameEvent {
+            turn_index: turn_idx,
+            stimulus,
+            is_visual_match,
+            is_audio_match,
+            user_response,
+        });
+
+        // --- Advance Game ---
+        self.current_turn_index += 1;
+        if self.current_turn_index >= self.settings.session_length {
+            self.is_running = false;
+        }
     }
 }
 
@@ -174,13 +206,13 @@ mod tests {
         let game_state = GameState::new(settings.clone());
         assert_eq!(game_state.settings.n_level, 2);
         assert_eq!(game_state.is_running, false);
-        assert_eq!(game_state.turn_history.len(), 0);
+        assert_eq!(game_state.event_history.len(), 0);
         assert_eq!(game_state.current_turn_index, 0);
         assert_eq!(game_state.visual_stats.true_positives, 0);
     }
 
     #[test]
-    fn test_tick_and_session_end() {
+    fn test_peek_and_process_turn() {
         let mut settings = default_settings();
         settings.session_length = 5;
         let mut game_state = GameState::new(settings);
@@ -188,21 +220,23 @@ mod tests {
 
         for i in 0..5 {
             assert_eq!(game_state.current_turn_index, i);
-            game_state.tick(); // Adds turn i to history
-            assert_eq!(game_state.turn_history.len(), i + 1);
-            game_state.process_input(&UserInput { position_match: false, audio_match: false }); // Processes turn i
+            let stimulus = game_state.peek_stimulus().unwrap();
+            assert!(stimulus.visual > 0); // Check that we got a real stimulus
+            
+            game_state.process_turn(UserResponse::default()); // Process turn i with default (no match) input
+            assert_eq!(game_state.event_history.len(), i + 1);
         }
 
         // After 5 turns are processed, index is 5.
         assert_eq!(game_state.current_turn_index, 5);
-        
-        // The next tick should stop the game
-        game_state.tick();
         assert_eq!(game_state.is_running, false);
+        
+        // The next peek should return None
+        assert!(game_state.peek_stimulus().is_none());
     }
 
     #[test]
-    fn test_process_input_with_pregen_sequence() {
+    fn test_process_turn_with_pregen_sequence() {
         let mut settings = default_settings();
         settings.n_level = 2;
         let mut game_state = GameState::new(settings);
@@ -218,40 +252,51 @@ mod tests {
         game_state.is_running = true;
 
         // --- Turn 0 ---
-        game_state.tick(); // Add T0 to history
-        assert_eq!(game_state.turn_history.len(), 1);
-        game_state.process_input(&UserInput { position_match: false, audio_match: false }); // Process T0
+        game_state.peek_stimulus();
+        game_state.process_turn(UserResponse { visual_match: false, audio_match: false });
         assert_eq!(game_state.visual_stats.true_negatives, 1);
         assert_eq!(game_state.audio_stats.true_negatives, 1);
         assert_eq!(game_state.current_turn_index, 1);
+        let event0 = &game_state.event_history[0];
+        assert_eq!(event0.is_visual_match, false);
+        assert_eq!(event0.user_response.visual_match, false);
 
         // --- Turn 1 ---
-        game_state.tick(); // Add T1
-        game_state.process_input(&UserInput { position_match: false, audio_match: false }); // Process T1
+        game_state.peek_stimulus();
+        game_state.process_turn(UserResponse { visual_match: false, audio_match: false });
         assert_eq!(game_state.visual_stats.true_negatives, 2);
         assert_eq!(game_state.audio_stats.true_negatives, 2);
         assert_eq!(game_state.current_turn_index, 2);
 
         // --- Turn 2 (Visual Match) ---
-        game_state.tick(); // Add T2
-        game_state.process_input(&UserInput { position_match: true, audio_match: false }); // Process T2
+        game_state.peek_stimulus();
+        game_state.process_turn(UserResponse { visual_match: true, audio_match: false });
         assert_eq!(game_state.visual_stats.true_positives, 1);
         assert_eq!(game_state.audio_stats.true_negatives, 3);
         assert_eq!(game_state.current_turn_index, 3);
+        let event2 = &game_state.event_history[2];
+        assert_eq!(event2.is_visual_match, true);
+        assert_eq!(event2.user_response.visual_match, true);
 
         // --- Turn 3 (Audio Match) ---
-        game_state.tick(); // Add T3
-        game_state.process_input(&UserInput { position_match: false, audio_match: true }); // Process T3
+        game_state.peek_stimulus();
+        game_state.process_turn(UserResponse { visual_match: false, audio_match: true });
         assert_eq!(game_state.visual_stats.true_negatives, 3);
         assert_eq!(game_state.audio_stats.true_positives, 1);
         assert_eq!(game_state.current_turn_index, 4);
+        let event3 = &game_state.event_history[3];
+        assert_eq!(event3.is_audio_match, true);
+        assert_eq!(event3.user_response.audio_match, true);
 
         // --- Turn 4 (Visual Match, user misses it) ---
-        game_state.tick(); // Add T4
-        game_state.process_input(&UserInput { position_match: false, audio_match: false }); // Process T4
+        game_state.peek_stimulus();
+        game_state.process_turn(UserResponse { visual_match: false, audio_match: false });
         assert_eq!(game_state.visual_stats.false_negatives, 1);
         assert_eq!(game_state.audio_stats.true_negatives, 4);
         assert_eq!(game_state.current_turn_index, 5);
+        let event4 = &game_state.event_history[4];
+        assert_eq!(event4.is_visual_match, true);
+        assert_eq!(event4.user_response.visual_match, false);
     }
 
     #[test]
@@ -272,30 +317,30 @@ mod tests {
 
         // Process turns 0, 1, 2 (no matches possible)
         for _ in 0..3 {
-            game_state.tick();
-            game_state.process_input(&UserInput { position_match: false, audio_match: false });
+            game_state.peek_stimulus();
+            game_state.process_turn(UserResponse::default());
         }
         assert_eq!(game_state.current_turn_index, 3);
         assert_eq!(game_state.visual_stats.true_negatives, 3);
         assert_eq!(game_state.audio_stats.true_negatives, 3);
 
         // --- Turn 3 (Audio Match) ---
-        game_state.tick();
-        game_state.process_input(&UserInput { position_match: false, audio_match: true });
+        game_state.peek_stimulus();
+        game_state.process_turn(UserResponse { visual_match: false, audio_match: true });
         assert_eq!(game_state.audio_stats.true_positives, 1);
         assert_eq!(game_state.visual_stats.true_negatives, 4); // Correctly said no visual match
         assert_eq!(game_state.current_turn_index, 4);
 
         // --- Turn 4 (Visual Match) ---
-        game_state.tick();
-        game_state.process_input(&UserInput { position_match: true, audio_match: false });
+        game_state.peek_stimulus();
+        game_state.process_turn(UserResponse { visual_match: true, audio_match: false });
         assert_eq!(game_state.visual_stats.true_positives, 1);
         assert_eq!(game_state.audio_stats.true_negatives, 4); // Correctly said no audio match
         assert_eq!(game_state.current_turn_index, 5);
 
         // --- Turn 5 (Audio Match, user misses) ---
-        game_state.tick();
-        game_state.process_input(&UserInput { position_match: false, audio_match: false });
+        game_state.peek_stimulus();
+        game_state.process_turn(UserResponse { visual_match: false, audio_match: false });
         assert_eq!(game_state.audio_stats.false_negatives, 1);
         assert_eq!(game_state.visual_stats.true_negatives, 5);
         assert_eq!(game_state.current_turn_index, 6);

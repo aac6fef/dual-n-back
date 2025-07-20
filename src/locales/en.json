@@ -51,8 +51,9 @@
     "title": "History & Progress",
     "loading": "Loading History...",
     "noHistory": "No history yet. Play a game to see your progress!",
-    "progressChart": "Progress Chart",
-    "difficultySettings": "Difficulty Settings",
+    "hitRateChart": "Hit Rate Trend",
+    "falseAlarmChart": "False Alarm Trend",
+    "difficultyProgression": "Difficulty Progression",
     "sessionHistory": "Session History",
     "visualHitRate": "Visual Hit Rate",
     "audioHitRate": "Audio Hit Rate",
@@ -65,6 +66,25 @@
     "nLevel": "N-Level",
     "sessionLength": "Session Length",
     "speed": "Speed"
+  },
+  "historyDetail": {
+    "title": "Session Details for {{date}}",
+    "notFound": "Session not found.",
+    "error": "An error occurred while loading session details.",
+    "noData": "No data available for this session.",
+    "sequence": "Event Sequence",
+    "legend": {
+      "title": "Legend",
+      "expectedMatch": "Expected Match (Border)",
+      "userAction": "User Action (Underline)",
+      "colorPosition": "Color & Position"
+    },
+    "stats": {
+      "hitRate": "Hit Rate",
+      "missRate": "Miss Rate",
+      "faRate": "False Alarm Rate",
+      "crRate": "Correct Rejection"
+    }
   },
   "game": {
     "title": "Dual N-Back",

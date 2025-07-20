@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use sled::Db;
 use std::sync::Mutex;
-use crate::game::{AccuracyStats, GameTurn};
+use crate::game::{AccuracyStats, GameEvent};
 use chrono::{DateTime, Utc};
 
 // --- User Settings ---
@@ -31,7 +31,7 @@ pub struct GameSession {
     pub id: String,
     pub timestamp: DateTime<Utc>,
     pub settings: UserSettings,
-    pub turn_history: Vec<GameTurn>,
+    pub event_history: Vec<GameEvent>,
     pub visual_stats: AccuracyStats,
     pub audio_stats: AccuracyStats,
 }
@@ -39,7 +39,7 @@ pub struct GameSession {
 impl GameSession {
     pub fn new(
         settings: UserSettings,
-        turn_history: Vec<GameTurn>,
+        event_history: Vec<GameEvent>,
         visual_stats: AccuracyStats,
         audio_stats: AccuracyStats,
     ) -> Self {
@@ -48,9 +48,31 @@ impl GameSession {
             id: format!("session_{}", now.timestamp_nanos_opt().unwrap_or_default()),
             timestamp: now,
             settings,
-            turn_history,
+            event_history,
             visual_stats,
             audio_stats,
+        }
+    }
+}
+
+/// A lighter version of GameSession for list views, omitting the heavy event history.
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct GameSessionSummary {
+    pub id: String,
+    pub timestamp: DateTime<Utc>,
+    pub settings: UserSettings,
+    pub visual_stats: AccuracyStats,
+    pub audio_stats: AccuracyStats,
+}
+
+impl From<&GameSession> for GameSessionSummary {
+    fn from(session: &GameSession) -> Self {
+        Self {
+            id: session.id.clone(),
+            timestamp: session.timestamp,
+            settings: session.settings.clone(),
+            visual_stats: session.visual_stats.clone(),
+            audio_stats: session.audio_stats.clone(),
         }
     }
 }
@@ -85,22 +107,38 @@ pub fn save_session(db: &Db, session: &GameSession) -> Result<(), sled::Error> {
     Ok(())
 }
 
-pub fn load_all_sessions(db: &Db) -> Result<Vec<GameSession>, sled::Error> {
+pub fn load_all_sessions(db: &Db) -> Result<Vec<GameSessionSummary>, sled::Error> {
     let tree = db.open_tree(SESSIONS_TREE)?;
-    let mut sessions: Vec<GameSession> = Vec::new();
+    let mut summaries: Vec<GameSessionSummary> = Vec::new();
     for item in tree.iter() {
         let (_, bytes) = item?;
+        // We still deserialize the full session, but immediately convert it to a summary
         match bincode::deserialize::<GameSession>(&bytes) {
-            Ok(session) => sessions.push(session),
+            Ok(session) => summaries.push((&session).into()),
             Err(e) => {
-                // Log the error and skip the corrupted/outdated entry
                 eprintln!("Skipping session due to deserialization error: {}", e);
             }
         }
     }
     // Sort by timestamp, newest first
-    sessions.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
-    Ok(sessions)
+    summaries.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
+    Ok(summaries)
+}
+
+pub fn load_session_by_id(db: &Db, session_id: &str) -> Result<Option<GameSession>, sled::Error> {
+    let tree = db.open_tree(SESSIONS_TREE)?;
+    match tree.get(session_id.as_bytes())? {
+        Some(bytes) => {
+            match bincode::deserialize::<GameSession>(&bytes) {
+                Ok(session) => Ok(Some(session)),
+                Err(e) => {
+                    eprintln!("Failed to deserialize session {}: {}", session_id, e);
+                    Ok(None)
+                }
+            }
+        }
+        None => Ok(None),
+    }
 }
 
 pub fn clear_all_data(db: &Db) -> Result<(), sled::Error> {
@@ -112,7 +150,7 @@ pub fn clear_all_data(db: &Db) -> Result<(), sled::Error> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::game::GameTurn;
+    use crate::game::{GameEvent, Stimulus, UserResponse};
 
     fn get_temp_db() -> Db {
         sled::Config::new().temporary(true).open().unwrap()
@@ -143,30 +181,47 @@ mod tests {
         let db = get_temp_db();
         
         // Initially, there should be no sessions
-        let sessions = load_all_sessions(&db).unwrap();
-        assert!(sessions.is_empty());
+        let summaries = load_all_sessions(&db).unwrap();
+        assert!(summaries.is_empty());
 
         // Create and save two sessions
         let settings = UserSettings::default();
-        let turn_history1 = vec![GameTurn { visual: 0, audio: 'A' }];
+        let event_history1 = vec![GameEvent {
+            turn_index: 0,
+            stimulus: Stimulus { visual: 1, audio: 'A' },
+            is_visual_match: false,
+            is_audio_match: false,
+            user_response: UserResponse::default(),
+        }];
         let stats1 = AccuracyStats { true_positives: 1, ..Default::default() };
-        let session1 = GameSession::new(settings.clone(), turn_history1, stats1.clone(), stats1.clone());
+        let session1 = GameSession::new(settings.clone(), event_history1, stats1.clone(), stats1.clone());
         
         std::thread::sleep(std::time::Duration::from_millis(10));
 
-        let turn_history2 = vec![GameTurn { visual: 1, audio: 'B' }];
+        let event_history2 = vec![]; // Empty for simplicity
         let stats2 = AccuracyStats { true_positives: 2, ..Default::default() };
-        let session2 = GameSession::new(settings.clone(), turn_history2, stats2.clone(), stats2.clone());
+        let session2 = GameSession::new(settings.clone(), event_history2, stats2.clone(), stats2.clone());
 
         save_session(&db, &session1).unwrap();
         save_session(&db, &session2).unwrap();
 
-        // Load sessions and check
-        let sessions = load_all_sessions(&db).unwrap();
-        assert_eq!(sessions.len(), 2);
+        // Load session summaries and check
+        let summaries = load_all_sessions(&db).unwrap();
+        assert_eq!(summaries.len(), 2);
         
         // Check if they are sorted correctly (newest first) and data is intact
-        assert_eq!(sessions[0].visual_stats.true_positives, 2);
-        assert_eq!(sessions[1].visual_stats.true_positives, 1);
+        assert_eq!(summaries[0].id, session2.id);
+        assert_eq!(summaries[0].visual_stats.true_positives, 2);
+        assert_eq!(summaries[1].visual_stats.true_positives, 1);
+
+        // Load a single full session by ID and check its details
+        let loaded_session1 = load_session_by_id(&db, &session1.id).unwrap().unwrap();
+        assert_eq!(loaded_session1.id, session1.id);
+        assert_eq!(loaded_session1.event_history.len(), 1);
+        assert_eq!(loaded_session1.event_history[0].stimulus.visual, 1);
+
+        // Test loading a non-existent session
+        let non_existent = load_session_by_id(&db, "non-existent-id").unwrap();
+        assert!(non_existent.is_none());
     }
 }

@@ -51,22 +51,40 @@
     "title": "历史与进度",
     "loading": "正在加载历史记录...",
     "noHistory": "暂无历史记录。开始一局游戏来查看你的进度！",
-    "progressChart": "进度图表",
-    "difficultySettings": "难度设置",
+    "hitRateChart": "命中率趋势",
+    "falseAlarmChart": "虚警率趋势",
+    "difficultyProgression": "难度进程",
     "sessionHistory": "会话历史",
-    "visualAccuracy": "视觉准确率",
-    "audioAccuracy": "听觉准确率",
     "visualHitRate": "视觉命中率",
     "audioHitRate": "听觉命中率",
     "visualFaRate": "视觉虚警率",
     "audioFaRate": "听觉虚警率",
     "visual": "视觉",
     "audio": "听觉",
-    "hitRate": "命中率",
-    "faRate": "虚警率",
+    "hitRate": "命中",
+    "faRate": "虚警",
     "nLevel": "N-Level",
     "sessionLength": "会话长度",
     "speed": "速度"
+  },
+  "historyDetail": {
+    "title": "会话详情 {{date}}",
+    "notFound": "未找到会话。",
+    "error": "加载会话详情时发生错误。",
+    "noData": "此会话无可用数据。",
+    "sequence": "事件序列",
+    "legend": {
+      "title": "图例说明",
+      "expectedMatch": "预期匹配 (边框)",
+      "userAction": "用户操作 (下划线)",
+      "colorPosition": "颜色与位置"
+    },
+    "stats": {
+      "hitRate": "命中率",
+      "missRate": "漏报率",
+      "faRate": "虚警率",
+      "crRate": "正确拒绝率"
+    }
   },
   "game": {
     "title": "Dual N-Back",
