@@ -32,6 +32,7 @@
   },
   "gameStatus": {
     "nLevel": "N-Level",
+    "speed": "Speed",
     "turn": "Turn",
     "vHit": "V. Hit",
     "vFa": "V. FA",
@@ -47,6 +48,8 @@
     "sessionHistory": "Session History",
     "visualHitRate": "Visual Hit Rate",
     "audioHitRate": "Audio Hit Rate",
+    "visualFaRate": "Visual FA Rate",
+    "audioFaRate": "Audio FA Rate",
     "visual": "Visual",
     "audio": "Audio",
     "hitRate": "Hit",
@@ -58,7 +61,11 @@
   "game": {
     "title": "Dual N-Back",
     "startGame": "Start Game",
+    "playAgain": "Play Again",
+    "preGameInfo": "Current level: N-Back {{nLevel}}",
     "gameOver": "Game Over",
+    "postGameTitle": "Session Review",
+    "historyPrompt": "You can view all data in the <0>{{historyLink}}</0> page",
     "summaryVisual": "Visual: Hit Rate {{hitRate}}%, False Alarm {{faRate}}%",
     "summaryAudio": "Audio: Hit Rate {{hitRate}}%, False Alarm {{faRate}}%",
     "position": "Position",

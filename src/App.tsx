@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import {
   HashRouter,
   Routes,
@@ -8,7 +7,7 @@ import {
 } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Home, Settings, History } from "lucide-react";
-import { useLocalStorage } from "./hooks/useLocalStorage";
+import { SettingsProvider } from "./contexts/SettingsContext";
 import "./App.css";
 import GamePage from "./pages/GamePage";
 import SettingsPage from "./pages/SettingsPage";
@@ -16,11 +15,6 @@ import HistoryPage from "./pages/HistoryPage";
 
 const Layout = () => {
   const { t } = useTranslation();
-  const [theme] = useLocalStorage('settings:theme', 'dark');
-
-  useEffect(() => {
-    document.body.classList.toggle('light-theme', theme === 'light');
-  }, [theme]);
 
   const getLinkClass = ({ isActive }: { isActive: boolean }) =>
     isActive ? "active" : "";
@@ -59,17 +53,31 @@ const Layout = () => {
   );
 };
 
+const GlobalSVGDefs = () => (
+  <svg width="0" height="0" style={{ position: 'absolute' }}>
+    <defs>
+      <linearGradient id="icon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style={{ stopColor: 'var(--color-primary)', stopOpacity: 1 }} />
+        <stop offset="100%" style={{ stopColor: 'var(--color-accent)', stopOpacity: 1 }} />
+      </linearGradient>
+    </defs>
+  </svg>
+);
+
 function App() {
   return (
-    <HashRouter>
-      <Routes>
-        <Route path="/" element={<Layout />}>
-          <Route index element={<GamePage />} />
-          <Route path="settings" element={<SettingsPage />} />
-          <Route path="history" element={<HistoryPage />} />
-        </Route>
-      </Routes>
-    </HashRouter>
+    <SettingsProvider>
+      <GlobalSVGDefs />
+      <HashRouter>
+        <Routes>
+          <Route path="/" element={<Layout />}>
+            <Route index element={<GamePage />} />
+            <Route path="settings" element={<SettingsPage />} />
+            <Route path="history" element={<HistoryPage />} />
+          </Route>
+        </Routes>
+      </HashRouter>
+    </SettingsProvider>
   );
 }
 

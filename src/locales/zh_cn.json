@@ -32,6 +32,7 @@
   },
   "gameStatus": {
     "nLevel": "N-Level",
+    "speed": "速度",
     "turn": "回合",
     "vHit": "视觉命中",
     "vFa": "视觉虚警",
@@ -49,6 +50,8 @@
     "audioAccuracy": "听觉准确率",
     "visualHitRate": "视觉命中率",
     "audioHitRate": "听觉命中率",
+    "visualFaRate": "视觉虚警率",
+    "audioFaRate": "听觉虚警率",
     "visual": "视觉",
     "audio": "听觉",
     "hitRate": "命中率",
@@ -60,7 +63,11 @@
   "game": {
     "title": "Dual N-Back",
     "startGame": "开始游戏",
+    "playAgain": "再来一局",
+    "preGameInfo": "当前难度: N-Back {{nLevel}}",
     "gameOver": "游戏结束",
+    "postGameTitle": "结束复盘",
+    "historyPrompt": "你可以在 <0>{{historyLink}}</0> 页面查看所有的数据",
     "summaryVisual": "视觉: 命中率 {{hitRate}}%, 虚警率 {{faRate}}%",
     "summaryAudio": "听觉: 命中率 {{hitRate}}%, 虚警率 {{faRate}}%",
     "position": "位置",

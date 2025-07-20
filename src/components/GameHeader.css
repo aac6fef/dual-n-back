@@ -1,0 +1,24 @@
+.game-header-container {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  width: 100%;
+  max-width: 400px;
+  padding: 8px 16px;
+  background-color: var(--sidebar-color);
+  border-radius: var(--border-radius-large);
+  margin-bottom: 1rem;
+}
+
+.header-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.header-item svg {
+  stroke-width: 2px;
+}

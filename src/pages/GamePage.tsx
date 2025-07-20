@@ -1,10 +1,16 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { useTranslation } from 'react-i18next';
+import { useTranslation, Trans } from 'react-i18next';
 import { invoke } from '@tauri-apps/api/core';
+import { useSettings } from '../contexts/SettingsContext';
+import { Link } from 'react-router-dom';
+import { BrainCircuit, Timer, Target, Ear, AlertCircle, History } from 'lucide-react';
+
 import Button from '../components/ui/Button';
 import Grid from '../components/Grid';
 import GameControls, { FeedbackState } from '../components/GameControls';
-import GameStatus from '../components/GameStatus';
+import GameHeader from '../components/GameHeader';
+import { InfoPanel, Stat } from '../components/InfoPanel';
+import './GamePage.css';
 
 // --- Data Structures mirroring Rust backend ---
 interface GameTurn {
@@ -39,8 +45,10 @@ interface UserInput {
 
 const GamePage: React.FC = () => {
   const { t } = useTranslation();
+  const { settings: contextSettings, isLoading: settingsLoading } = useSettings();
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isPostGame, setIsPostGame] = useState(false); // State to manage post-game summary view
   const userInputRef = useRef<UserInput>({ position_match: false, audio_match: false });
   
   // State for immediate feedback
@@ -62,25 +70,28 @@ const GamePage: React.FC = () => {
 
   // --- Audio Playback Effect ---
   useEffect(() => {
-    const letter = gameState?.currentTurn?.audio_stimulus.letter;
-    if (letter) {
-      const playSound = () => {
-        try {
-          const soundName = `${letter}.wav`;
-          // Assets in `public` are served from the root.
-          const audioSrc = `/sounds/${soundName}`;
-          
-          const audio = new Audio(audioSrc);
-          audio.play().catch(e => {
-            console.error(`Error playing ${audioSrc}:`, e);
-          });
-        } catch (error) {
-          console.error("Error preparing audio:", error);
-        }
-      };
-      playSound();
+    // Only play sounds if the game is actively running.
+    if (gameState && gameState.isRunning) {
+      const letter = gameState.currentTurn?.audio_stimulus.letter;
+      if (letter) {
+        const playSound = () => {
+          try {
+            const soundName = `letter_${letter}.mp3`;
+            // Assets in `public` are served from the root.
+            const audioSrc = `/sounds/${soundName}`;
+            
+            const audio = new Audio(audioSrc);
+            audio.play().catch(e => {
+              console.error(`Error playing ${audioSrc}:`, e);
+            });
+          } catch (error) {
+            console.error("Error preparing audio:", error);
+          }
+        };
+        playSound();
+      }
     }
-  }, [gameState?.currentTurn?.audio_stimulus.letter, gameState?.currentTurnIndex]); // Depend on specific properties
+  }, [gameState?.currentTurnIndex, gameState?.isRunning]); // Depend on turn index and running state
 
   // --- Game Loop Effect ---
   useEffect(() => {
@@ -88,48 +99,54 @@ const GamePage: React.FC = () => {
       return;
     }
 
-    const advanceTurn = async () => {
+    const gameSpeed = gameState.settings.speed_ms;
+
+    const timerId = setTimeout(async () => {
       try {
-        // Submit the input from the *previous* turn
+        // Submit the input for the current turn.
         await invoke('submit_user_input', { userInput: userInputRef.current });
-        
-        // Reset for the new turn
         userInputRef.current = { position_match: false, audio_match: false };
 
-        // Get the state for the *new* turn
+        // Get the state for the *next* turn.
         const newState = await invoke<GameState>('get_game_state');
-        setGameState(newState);
-        
-        // Reset feedback for the new turn
-        setHasRespondedVisual(false);
-        setHasRespondedAudio(false);
-        setPositionFeedback(null);
-        setAudioFeedback(null);
 
+        // The backend has now determined if the game should continue.
+        if (newState.isRunning) {
+          setGameState(newState);
+          setHasRespondedVisual(false);
+          setHasRespondedAudio(false);
+          setPositionFeedback(null);
+          setAudioFeedback(null);
+        } else {
+          // The game is over. The backend has sent the final stats.
+          // We stop the game loop immediately by setting isRunning to false.
+          // The UI will continue to show the last stimulus because we haven't updated the turn index yet.
+          setGameState(s => s ? { ...s, isRunning: false } : null);
+
+          // We wait for the duration of the last stimulus to pass.
+          setTimeout(() => {
+            // Now, we update the state with the final stats from the backend and trigger the post-game view.
+            setGameState(newState);
+            setIsPostGame(true);
+          }, gameSpeed); // Use the speed from the turn that just finished.
+        }
       } catch (error) {
         console.error("Failed to advance turn:", error);
-        // Stop the game on error to prevent infinite loops
         setGameState(s => s ? { ...s, isRunning: false } : null);
       }
-    };
-
-    const gameSpeed = gameState.settings.speed_ms;
-    const timerId = setTimeout(advanceTurn, gameSpeed); 
+    }, gameSpeed);
 
     return () => clearTimeout(timerId);
   }, [gameState]); // Re-run this effect whenever the gameState object itself changes.
 
   const handleStartGame = useCallback(async () => {
     setIsLoading(true);
-    // User interaction (the click) should be enough to unlock the audio context.
-    // The previous attempt with a silent sound is a good fallback, but let's try without it first for simplicity.
-    
+    setIsPostGame(false); // Reset post-game state
     try {
       await invoke('start_game');
       const newState = await invoke<GameState>('get_game_state');
       setGameState(newState);
       userInputRef.current = { position_match: false, audio_match: false };
-      // Reset feedback for new game
       setHasRespondedVisual(false);
       setHasRespondedAudio(false);
       setPositionFeedback(null);
@@ -160,49 +177,72 @@ const GamePage: React.FC = () => {
   };
 
   const renderGameContent = () => {
-    const currentGameState = gameState; // Capture state for render
-    
-    // console.log("Rendering with state:", currentGameState); // For debugging
+    if (settingsLoading) {
+      return <p>{t('settings.loading')}</p>;
+    }
 
-    if (!currentGameState) {
+    // Post-Game Summary View
+    if (isPostGame && gameState) {
       return (
-        <div style={{ marginTop: '1.5rem' }}>
+        <div className="post-game-container">
+          <InfoPanel title={t('game.postGameTitle')}>
+            <div className="stats-group-horizontal">
+              <Stat icon={<Target />} label={t('history.visualHitRate')} value={`${(gameState.visualHitRate * 100).toFixed(1)}%`} />
+              <Stat icon={<AlertCircle />} label={t('history.visualFaRate')} value={`${(gameState.visualFalseAlarmRate * 100).toFixed(1)}%`} />
+            </div>
+            <div className="stats-group-horizontal">
+              <Stat icon={<Ear />} label={t('history.audioHitRate')} value={`${(gameState.audioHitRate * 100).toFixed(1)}%`} />
+              <Stat icon={<AlertCircle />} label={t('history.audioFaRate')} value={`${(gameState.audioFalseAlarmRate * 100).toFixed(1)}%`} />
+            </div>
+          </InfoPanel>
+          <p className="history-prompt">
+            <Trans
+              i18nKey="game.historyPrompt"
+              values={{ historyLink: t('nav.history') }}
+              components={[
+                <Link to="/history" className="history-link">
+                  <History size={16} />
+                </Link>
+              ]}
+            />
+          </p>
           <Button onClick={handleStartGame} loading={isLoading}>
-            {t('game.startGame')}
+            {t('game.playAgain')}
           </Button>
         </div>
       );
     }
 
-    if (!currentGameState.isRunning) {
+    // Pre-Game View
+    if (!gameState) {
       return (
-        <div style={{ marginTop: '1.5rem' }}>
-          <div className="game-over-summary">
-            <h2>{t('game.gameOver')}</h2>
-            <p>{t('game.summaryVisual', { hitRate: (currentGameState.visualHitRate * 100).toFixed(1), faRate: (currentGameState.visualFalseAlarmRate * 100).toFixed(1) })}</p>
-            <p>{t('game.summaryAudio', { hitRate: (currentGameState.audioHitRate * 100).toFixed(1), faRate: (currentGameState.audioFalseAlarmRate * 100).toFixed(1) })}</p>
-          </div>
+        <>
+          <InfoPanel>
+            <div className="stats-group-horizontal">
+              <Stat icon={<BrainCircuit />} label={t('gameStatus.nLevel')} value={contextSettings.n_level} />
+              <Stat icon={<Timer />} label={t('gameStatus.speed')} value={`${contextSettings.speed_ms}ms`} />
+            </div>
+          </InfoPanel>
           <Button onClick={handleStartGame} loading={isLoading}>
             {t('game.startGame')}
           </Button>
-        </div>
+        </>
       );
     }
 
+    // Active Game View
     return (
       <>
-        <GameStatus
-          nLevel={currentGameState.settings.n_level}
-          turn={currentGameState.currentTurnIndex}
-          totalTurns={currentGameState.settings.session_length}
-          visualHitRate={currentGameState.visualHitRate * 100}
-          visualFalseAlarmRate={currentGameState.visualFalseAlarmRate * 100}
-          audioHitRate={currentGameState.audioHitRate * 100}
-          audioFalseAlarmRate={currentGameState.audioFalseAlarmRate * 100}
+        <GameHeader
+          nLevel={gameState.settings.n_level}
+          turn={gameState.currentTurnIndex}
+          totalTurns={gameState.settings.session_length}
+          visualHitRate={gameState.visualHitRate * 100}
+          audioHitRate={gameState.audioHitRate * 100}
         />
-        <Grid 
-          key={currentGameState.currentTurnIndex}
-          activeIndex={currentGameState.currentTurn?.visual_stimulus.position ?? null} 
+        <Grid
+          key={gameState.currentTurnIndex}
+          activeIndex={gameState.currentTurn?.visual_stimulus.position ?? null}
         />
         <GameControls
           onPositionMatch={handlePositionMatch}
@@ -217,7 +257,7 @@ const GamePage: React.FC = () => {
   };
 
   return (
-    <div style={{ textAlign: 'center' }}>
+    <div className="game-page-container">
       <h1 className="page-title">{t('game.title')}</h1>
       {renderGameContent()}
     </div>

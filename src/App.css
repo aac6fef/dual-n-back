@@ -1,16 +1,20 @@
 /* Global Styles */
 :root {
   /* Dark Theme (Default) */
+  --panel-bg: #1A1A2E;
   --background-color: #1a1b26;
   --sidebar-color: #24283b;
   --text-color: #c0caf5;
   --hover-color: #414868;
   --accent-color: #7aa2f7;
   --card-border-color: var(--hover-color);
+  --border-radius-medium: 8px;
+  --border-radius-large: 12px;
 }
 
 .light-theme {
   /* Light Theme */
+  --panel-bg: #ffffff;
   --background-color: #f2f2f2;
   --sidebar-color: #ffffff;
   --text-color: #2d3748;
@@ -69,7 +73,7 @@ body {
   display: flex;
   align-items: center;
   padding: 0.8rem 1rem;
-  border-radius: 8px;
+  border-radius: var(--border-radius-medium);
   text-decoration: none;
   color: var(--text-color);
   font-weight: 500;

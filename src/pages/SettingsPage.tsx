@@ -3,19 +3,12 @@ import { useTranslation } from 'react-i18next';
 import { invoke } from '@tauri-apps/api/core';
 import { save } from '@tauri-apps/plugin-dialog';
 import { writeTextFile } from '@tauri-apps/plugin-fs';
-import { useLocalStorage } from '../hooks/useLocalStorage';
+import { useSettings } from '../contexts/SettingsContext';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Switch from '../components/ui/Switch';
 import { Sliders, Monitor, Database, Download, CheckCircle } from 'lucide-react';
 import './SettingsPage.css';
-
-interface UserSettings {
-  n_level: number;
-  speed_ms: number;
-  session_length: number;
-  grid_size: number;
-}
 
 // Hook to prompt user before leaving the page with unsaved changes
 const useBeforeUnload = (when: boolean, message: string) => {
@@ -33,115 +26,35 @@ const useBeforeUnload = (when: boolean, message: string) => {
   }, [when, message]);
 };
 
-
 const SettingsPage: React.FC = () => {
-  const { t, i18n } = useTranslation();
-  
-  // --- State for backend settings ---
-  const [nLevel, setNLevel] = useState(2);
-  const [speed, setSpeed] = useState(2000);
-  const [sessionLength, setSessionLength] = useState(30);
-  const [gridSize, setGridSize] = useState(3);
-  
-  // --- State for client-side settings ---
-  const [visualFeedback, setVisualFeedback] = useLocalStorage('settings:visualFeedback', true);
-  const [theme, setTheme] = useLocalStorage('settings:theme', 'dark');
-  const [language, setLanguage] = useLocalStorage('settings:language', i18n.language);
-
-  // --- Component State ---
-  const [isLoading, setIsLoading] = useState(true);
+  const { t } = useTranslation();
+  const { settings, setSettings, saveSettings, isLoading, isDirty } = useSettings();
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success'>('idle');
-  const [initialState, setInitialState] = useState<any>({});
 
-  const minSessionLength = Math.max(20, 5 * nLevel);
-  const isSessionLengthInvalid = sessionLength < minSessionLength;
+  const { n_level, speed_ms, session_length, grid_size, visualFeedback, theme, language } = settings;
 
-  const currentSettings = {
-    nLevel,
-    speed,
-    sessionLength,
-    gridSize,
-    visualFeedback,
-    theme,
-    language,
-  };
-
-  const isDirty = JSON.stringify(initialState) !== JSON.stringify(currentSettings);
+  const minSessionLength = Math.max(20, 5 * n_level);
+  const isSessionLengthInvalid = session_length < minSessionLength;
 
   useBeforeUnload(isDirty, t('settings.unsavedChanges'));
 
-  // Load settings from backend and local storage on component mount
-  useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        const loadedSettings = await invoke<UserSettings>('load_user_settings');
-        const initialState = {
-          nLevel: loadedSettings.n_level,
-          speed: loadedSettings.speed_ms,
-          sessionLength: loadedSettings.session_length,
-          gridSize: loadedSettings.grid_size,
-          visualFeedback,
-          theme,
-          language,
-        };
-        setNLevel(initialState.nLevel);
-        setSpeed(initialState.speed);
-        setSessionLength(initialState.sessionLength);
-        setGridSize(initialState.gridSize);
-        setInitialState(initialState);
-      } catch (error) {
-        console.error("Failed to load settings, using default values:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadSettings();
-  }, []); // visualFeedback, theme, language are stable from useLocalStorage
-
-  // Effect to sync language between i18n and local storage
-  useEffect(() => {
-    if (i18n.language !== language) {
-      i18n.changeLanguage(language);
-    }
-    const handleLanguageChange = (lng: string) => {
-      setLanguage(lng);
-    };
-    i18n.on('languageChanged', handleLanguageChange);
-    return () => {
-      i18n.off('languageChanged', handleLanguageChange);
-    };
-  }, [language, i18n, setLanguage]);
-
   // Effect to adjust session length if n-level changes make it invalid
   useEffect(() => {
-    if (isSessionLengthInvalid) {
-      setSessionLength(minSessionLength);
+    if (session_length < minSessionLength) {
+      setSettings(prev => ({ ...prev, session_length: minSessionLength }));
     }
-  }, [nLevel, minSessionLength, isSessionLengthInvalid]);
-
-  // Effect to toggle theme class on body
-  useEffect(() => {
-    document.body.classList.toggle('light-theme', theme === 'light');
-  }, [theme]);
+  }, [n_level, session_length, minSessionLength, setSettings]);
 
   const handleSave = async () => {
     if (isSessionLengthInvalid) {
-      alert(t('settings.coreTraining.sessionLengthError', { minLength: minSessionLength, nLevel: nLevel }));
+      alert(t('settings.coreTraining.sessionLengthError', { minLength: minSessionLength, nLevel: n_level }));
       return;
     }
     setSaveStatus('saving');
-    const settingsToSave: UserSettings = {
-      n_level: nLevel,
-      speed_ms: speed,
-      session_length: sessionLength,
-      grid_size: gridSize,
-    };
     try {
-      // Simulate a short delay for better UX
-      await new Promise(resolve => setTimeout(resolve, 200));
-      await invoke('save_user_settings', { settings: settingsToSave });
+      await new Promise(resolve => setTimeout(resolve, 200)); // UX delay
+      await saveSettings();
       setSaveStatus('success');
-      setInitialState(currentSettings); // Update initial state to reset dirty check
       setTimeout(() => setSaveStatus('idle'), 2000);
     } catch (error) {
       console.error("Failed to save settings:", error);
@@ -193,56 +106,56 @@ const SettingsPage: React.FC = () => {
             {t('settings.coreTraining.title')}
           </h2>
           <div className="form-group">
-            <label htmlFor="n-level">{t('settings.coreTraining.nLevel', { level: nLevel })}</label>
+            <label htmlFor="n-level">{t('settings.coreTraining.nLevel', { level: n_level })}</label>
             <input
               type="range"
               id="n-level"
               min="1"
               max="9"
-              value={nLevel}
-              onChange={(e) => setNLevel(Number(e.target.value))}
+              value={n_level}
+              onChange={(e) => setSettings(s => ({ ...s, n_level: Number(e.target.value) }))}
               className="slider"
             />
           </div>
           <div className="form-group">
-            <label htmlFor="speed">{t('settings.coreTraining.speed', { speed: speed })}</label>
+            <label htmlFor="speed">{t('settings.coreTraining.speed', { speed: speed_ms })}</label>
             <input
               type="range"
               id="speed"
               min="500"
               max="5000"
               step="100"
-              value={speed}
-              onChange={(e) => setSpeed(Number(e.target.value))}
+              value={speed_ms}
+              onChange={(e) => setSettings(s => ({ ...s, speed_ms: Number(e.target.value) }))}
               className="slider"
             />
           </div>
           <div className="form-group">
-            <label htmlFor="session-length">{t('settings.coreTraining.sessionLength', { length: sessionLength })}</label>
+            <label htmlFor="session-length">{t('settings.coreTraining.sessionLength', { length: session_length })}</label>
             <input
               type="range"
               id="session-length"
               min={minSessionLength}
               max="100"
-              value={sessionLength}
-              onChange={(e) => setSessionLength(Number(e.target.value))}
+              value={session_length}
+              onChange={(e) => setSettings(s => ({ ...s, session_length: Number(e.target.value) }))}
               className={`slider ${isSessionLengthInvalid ? 'invalid' : ''}`}
             />
             {isSessionLengthInvalid && (
               <div className="error-message">
-                {t('settings.coreTraining.sessionLengthError', { minLength: minSessionLength, nLevel: nLevel })}
+                {t('settings.coreTraining.sessionLengthError', { minLength: minSessionLength, nLevel: n_level })}
               </div>
             )}
           </div>
           <div className="form-group">
-            <label htmlFor="grid-size">{t('settings.coreTraining.gridSize', { size: gridSize })}</label>
+            <label htmlFor="grid-size">{t('settings.coreTraining.gridSize', { size: grid_size })}</label>
             <input
               type="range"
               id="grid-size"
               min="3"
               max="5"
-              value={gridSize}
-              onChange={(e) => setGridSize(Number(e.target.value))}
+              value={grid_size}
+              onChange={(e) => setSettings(s => ({ ...s, grid_size: Number(e.target.value) }))}
               className="slider"
             />
           </div>
@@ -257,21 +170,21 @@ const SettingsPage: React.FC = () => {
             id="visual-feedback"
             label={t('settings.interface.visualFeedback')}
             checked={visualFeedback}
-            onChange={(e) => setVisualFeedback(e.target.checked)}
+            onChange={(e) => setSettings(s => ({ ...s, visualFeedback: e.target.checked }))}
           />
           <Switch
             id="theme-switcher"
             label={t('settings.interface.lightTheme')}
             checked={theme === 'light'}
-            onChange={(e) => setTheme(e.target.checked ? 'light' : 'dark')}
+            onChange={(e) => setSettings(s => ({ ...s, theme: e.target.checked ? 'light' : 'dark' }))}
           />
           <div className="form-group">
             <label htmlFor="language-select">{t('settings.interface.language')}</label>
-            <select 
-              id="language-select" 
+            <select
+              id="language-select"
               className="select-input"
               value={language}
-              onChange={(e) => setLanguage(e.target.value)}
+              onChange={(e) => setSettings(s => ({ ...s, language: e.target.value }))}
             >
               <option value="en">English</option>
               <option value="zh_cn">简体中文</option>
