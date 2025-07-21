@@ -3,7 +3,7 @@ mod persistence;
 pub mod sequence_generator;
 
 use chrono::Duration;
-use game::{AccuracyStats, AppState, GameEvent, GameState, Stimulus, UserResponse};
+use game::{AppState, GameState, Stimulus, UserResponse};
 use persistence::{
     clear_all_data, load_all_sessions, load_session_by_id, load_settings, save_session,
     save_settings, DbState, GameSession, GameSessionSummary, UserSettings,

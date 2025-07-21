@@ -2,6 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { invoke } from '@tauri-apps/api/core';
+import {
+  BrainCircuit,
+  Clock,
+  ListChecks,
+  Target,
+  Ear,
+  HelpCircle,
+  Eye,
+  MousePointerClick,
+  BookOpen,
+} from 'lucide-react';
 import Card from '../components/ui/Card';
 import ColorGridLegend from '../components/ColorGridLegend';
 import './HistoryDetailPage.css';
@@ -134,23 +145,23 @@ const HistoryDetailPage: React.FC = () => {
   return (
     <div className="history-detail-container">
       <h1 className="page-title">{t('historyDetail.title', { date: new Date(session.timestamp).toLocaleString() })}</h1>
-      
+
       <Card className="detail-summary-card">
-        <div className="summary-item"><strong>{t('history.nLevel')}:</strong> {session.settings.n_level}</div>
-        <div className="summary-item"><strong>{t('history.speed')}:</strong> {session.settings.speed_ms}ms</div>
-        <div className="summary-item"><strong>{t('history.sessionLength')}:</strong> {session.settings.session_length}</div>
+        <div className="summary-item"><BrainCircuit size={18} /><strong>{t('history.nLevel')}:</strong> {session.settings.n_level}</div>
+        <div className="summary-item"><Clock size={18} /><strong>{t('history.speed')}:</strong> {session.settings.speed_ms}ms</div>
+        <div className="summary-item"><ListChecks size={18} /><strong>{t('history.sessionLength')}:</strong> {session.settings.session_length}</div>
       </Card>
 
       <Card className="stats-card">
         <div className="stats-column">
-          <h3 className="stats-title">{t('history.visual')}</h3>
+          <h3 className="stats-title"><Eye size={20} /> {t('history.visual')}</h3>
           <div className="stat-item"><span>{t('historyDetail.stats.hitRate')}:</span> <span>{getCalculatedStats(session.visual_stats).hitRate.toFixed(1)}%</span></div>
           <div className="stat-item"><span>{t('historyDetail.stats.missRate')}:</span> <span>{getCalculatedStats(session.visual_stats).missRate.toFixed(1)}%</span></div>
           <div className="stat-item"><span>{t('historyDetail.stats.faRate')}:</span> <span>{getCalculatedStats(session.visual_stats).falseAlarmRate.toFixed(1)}%</span></div>
           <div className="stat-item"><span>{t('historyDetail.stats.crRate')}:</span> <span>{getCalculatedStats(session.visual_stats).correctRejectionRate.toFixed(1)}%</span></div>
         </div>
         <div className="stats-column">
-          <h3 className="stats-title">{t('history.audio')}</h3>
+          <h3 className="stats-title"><Ear size={20} /> {t('history.audio')}</h3>
           <div className="stat-item"><span>{t('historyDetail.stats.hitRate')}:</span> <span>{getCalculatedStats(session.audio_stats).hitRate.toFixed(1)}%</span></div>
           <div className="stat-item"><span>{t('historyDetail.stats.missRate')}:</span> <span>{getCalculatedStats(session.audio_stats).missRate.toFixed(1)}%</span></div>
           <div className="stat-item"><span>{t('historyDetail.stats.faRate')}:</span> <span>{getCalculatedStats(session.audio_stats).falseAlarmRate.toFixed(1)}%</span></div>
@@ -159,16 +170,16 @@ const HistoryDetailPage: React.FC = () => {
       </Card>
 
       <Card className="legends-card">
-        <h3 className="legend-title">{t('historyDetail.legend.title')}</h3>
+        <h3 className="legend-title"><HelpCircle size={20} /> {t('historyDetail.legend.title')}</h3>
         <div className="legends-container">
           <div className="legend-group">
             <div className="legend-item">
               <div className="legend-box match"></div>
-              <span>{t('historyDetail.legend.expectedMatch')}</span>
+              <span><Target size={16} /> {t('historyDetail.legend.expectedMatch')}</span>
             </div>
             <div className="legend-item">
               <div className="legend-text user-click-audio">Text</div>
-              <span>{t('historyDetail.legend.userAction')}</span>
+              <span><MousePointerClick size={16} /> {t('historyDetail.legend.userAction')}</span>
             </div>
           </div>
           <div className="legend-group">
@@ -178,12 +189,12 @@ const HistoryDetailPage: React.FC = () => {
         </div>
       </Card>
 
-      <h2 className="page-subtitle">{t('historyDetail.sequence')}</h2>
+      <h2 className="page-subtitle"><BookOpen size={22} /> {t('historyDetail.sequence')}</h2>
       <Card className="sequence-card">
         <div className="sequence-header">
           <div>#</div>
-          <div>{t('history.visual')}</div>
-          <div>{t('history.audio')}</div>
+          <div><Eye size={18} /> {t('history.visual')}</div>
+          <div><Ear size={18} /> {t('history.audio')}</div>
         </div>
         <div className="sequence-grid">
           {session.event_history.map(renderEvent)}

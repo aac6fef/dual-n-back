@@ -119,12 +119,6 @@ impl GameState {
     }
 }
 
-#[derive(serde::Deserialize)]
-pub struct UserInput {
-    pub position_match: bool,
-    pub audio_match: bool,
-}
-
 impl GameState {
     /// Processes user input for the current turn, records the event, and updates stats.
     pub fn process_turn(&mut self, user_response: UserResponse) {

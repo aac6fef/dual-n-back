@@ -15,6 +15,10 @@
 }
 
 .summary-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   flex-basis: 200px;
   text-align: center;
 }
@@ -33,6 +37,10 @@
 }
 
 .stats-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   text-align: center;
   margin-top: 0;
   margin-bottom: 1rem;
@@ -60,6 +68,10 @@
 }
 
 .legend-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   text-align: center;
   margin-top: 0;
   margin-bottom: 1.5rem;
@@ -96,6 +108,12 @@
   font-size: 0.9rem;
 }
 
+.legend-item span {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
 .legend-box {
   width: 25px;
   height: 25px;
@@ -108,6 +126,16 @@
 
 .legend-text {
   font-weight: bold;
+}
+
+.page-subtitle {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--text-color);
+  margin: 2rem 0 1rem;
 }
 
 .sequence-card {
@@ -128,6 +156,13 @@
   font-size: 1.2rem;
   border-bottom: 2px solid var(--hover-color);
   margin-bottom: 0.5rem;
+}
+
+.sequence-header > div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
 }
 
 .event-item {

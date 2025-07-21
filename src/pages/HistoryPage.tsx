@@ -11,13 +11,10 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
-  ResponsiveContainer,
   ReferenceLine,
   Label,
 } from 'recharts';
 import {
-  BarChart3,
   History as HistoryIcon,
   Sliders,
   ChevronRight,
