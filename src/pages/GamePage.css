@@ -1,9 +1,38 @@
 .game-page-container {
-  text-align: center;
-  width: 100%;
   display: flex;
   flex-direction: column;
   align-items: center;
+  gap: 1.5rem;
+  height: 100%;
+}
+
+.pre-game-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 480px;
+  margin: auto;
+}
+
+.pre-game-card {
+  width: 100%;
+  padding: 1.5rem;
+}
+
+.stats-group-horizontal {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  width: 100%;
+}
+
+.start-game-btn {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1.2rem;
 }
 
 .pre-game-info {

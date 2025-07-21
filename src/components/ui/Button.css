@@ -47,27 +47,29 @@
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: #9eceff;
+  background-color: var(--btn-primary-hover-bg);
 }
 
 /* Secondary Button */
 .btn-secondary {
   background-color: var(--hover-color);
   color: var(--text-color);
-  border: 1px solid var(--hover-color);
+  border: 1px solid var(--card-border-color);
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background-color: #565f89;
+  background-color: var(--accent-color);
+  color: var(--background-color);
+  border-color: var(--accent-color);
 }
 
 /* Danger Button */
 .btn-danger {
-  background-color: #e5484d;
+  background-color: var(--btn-danger-bg);
   color: #fff;
-  border: 1px solid #e5484d;
+  border: 1px solid var(--btn-danger-bg);
 }
 
 .btn-danger:hover:not(:disabled) {
-  background-color: #f05f65;
+  background-color: var(--btn-danger-hover-bg);
 }

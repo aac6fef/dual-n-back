@@ -1,58 +1,11 @@
-import {
-  HashRouter,
-  Routes,
-  Route,
-  NavLink,
-  Outlet,
-} from "react-router-dom";
-import { useTranslation } from "react-i18next";
-import { Home, Settings, History } from "lucide-react";
+import { HashRouter, Routes, Route } from "react-router-dom";
 import { SettingsProvider } from "./contexts/SettingsContext";
-import "./App.css";
+import Layout from "./components/Layout"; // Import the new Layout component
 import GamePage from "./pages/GamePage";
 import SettingsPage from "./pages/SettingsPage";
 import HistoryPage from "./pages/HistoryPage";
 import HistoryDetailPage from "./pages/HistoryDetailPage";
-
-const Layout = () => {
-  const { t } = useTranslation();
-
-  const getLinkClass = ({ isActive }: { isActive: boolean }) =>
-    isActive ? "active" : "";
-
-  return (
-    <div className="app-container">
-      <nav className="sidebar">
-        <div className="sidebar-header">
-          <h2>{t('nav.title')}</h2>
-        </div>
-        <ul className="nav-links">
-          <li>
-            <NavLink to="/" className={getLinkClass}>
-              <Home size={20} />
-              <span>{t('nav.game')}</span>
-            </NavLink>
-          </li>
-          <li>
-            <NavLink to="/settings" className={getLinkClass}>
-              <Settings size={20} />
-              <span>{t('nav.settings')}</span>
-            </NavLink>
-          </li>
-          <li>
-            <NavLink to="/history" className={getLinkClass}>
-              <History size={20} />
-              <span>{t('nav.history')}</span>
-            </NavLink>
-          </li>
-        </ul>
-      </nav>
-      <main className="content">
-        <Outlet />
-      </main>
-    </div>
-  );
-};
+import "./App.css";
 
 function App() {
   return (
@@ -64,6 +17,7 @@ function App() {
             <Route path="settings" element={<SettingsPage />} />
             <Route path="history" element={<HistoryPage />} />
             <Route path="history/:sessionId" element={<HistoryDetailPage />} />
+            <Route path="results/:sessionId" element={<HistoryDetailPage />} />
           </Route>
         </Routes>
       </HashRouter>

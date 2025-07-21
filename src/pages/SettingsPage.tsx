@@ -7,12 +7,12 @@ import { useSettings } from '../contexts/SettingsContext';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Switch from '../components/ui/Switch';
+import SettingItem from '../components/SettingItem'; // Import the new component
 import {
   Sliders,
   Monitor,
   Database,
   Download,
-  CheckCircle,
   Trash2,
   Code,
   BrainCircuit,
@@ -21,8 +21,20 @@ import {
   Languages,
   Sun,
   Moon,
+  Beaker,
 } from 'lucide-react';
 import './SettingsPage.css';
+
+// Constants for magic numbers
+const DEBOUNCE_DELAY = 500;
+const MIN_N_LEVEL = 1;
+const MAX_N_LEVEL = 9;
+const MIN_SPEED_NORMAL = 1500;
+const MIN_SPEED_FAST = 500;
+const MAX_SPEED = 5000;
+const MIN_SESSION_BASE = 20;
+const SESSION_LENGTH_FACTOR = 5;
+const MAX_SESSION_LENGTH = 100;
 
 const SettingsPage: React.FC = () => {
   const { t } = useTranslation();
@@ -32,8 +44,8 @@ const SettingsPage: React.FC = () => {
 
   const { n_level, speed_ms, session_length, theme, language, allowFastSpeed } = settings;
 
-  const minSpeed = allowFastSpeed ? 500 : 1500;
-  const minSessionLength = Math.max(20, 5 * n_level);
+  const minSpeed = allowFastSpeed ? MIN_SPEED_FAST : MIN_SPEED_NORMAL;
+  const minSessionLength = Math.max(MIN_SESSION_BASE, SESSION_LENGTH_FACTOR * n_level);
   const isSessionLengthInvalid = session_length < minSessionLength;
 
   // Auto-save effect with debouncing
@@ -49,22 +61,34 @@ const SettingsPage: React.FC = () => {
 
     const handler = setTimeout(() => {
       saveSettings();
-    }, 500); // Debounce saving
+    }, DEBOUNCE_DELAY);
 
-    return () => {
-      clearTimeout(handler);
-    };
+    return () => clearTimeout(handler);
   }, [settings, saveSettings, isSessionLengthInvalid]);
 
-  // Effect to adjust session length and speed if settings change make them invalid
-  useEffect(() => {
-    if (session_length < minSessionLength) {
-      setSettings(prev => ({ ...prev, session_length: minSessionLength }));
-    }
-    if (speed_ms < minSpeed) {
-      setSettings(prev => ({ ...prev, speed_ms: minSpeed }));
-    }
-  }, [n_level, session_length, minSessionLength, speed_ms, minSpeed, setSettings]);
+  // Centralized handler for changing settings
+  const handleSettingChange = (key: keyof typeof settings, value: any) => {
+    setSettings(prev => {
+      const newSettings = { ...prev, [key]: value };
+
+      // Adjust dependent settings immediately
+      if (key === 'n_level') {
+        const newMinSession = Math.max(MIN_SESSION_BASE, SESSION_LENGTH_FACTOR * value);
+        if (newSettings.session_length < newMinSession) {
+          newSettings.session_length = newMinSession;
+        }
+      }
+
+      if (key === 'allowFastSpeed') {
+        const newMinSpeed = value ? MIN_SPEED_FAST : MIN_SPEED_NORMAL;
+        if (newSettings.speed_ms < newMinSpeed) {
+          newSettings.speed_ms = newMinSpeed;
+        }
+      }
+      
+      return newSettings;
+    });
+  };
 
   const handleExport = async () => {
     try {
@@ -126,57 +150,56 @@ const SettingsPage: React.FC = () => {
             <Sliders size={20} />
             {t('settings.coreTraining.title')}
           </h2>
-          <div className="setting-item">
-            <div className="setting-label">
-              <BrainCircuit size={18} />
-              <span>{t('settings.coreTraining.nLevel', { level: n_level })}</span>
-            </div>
+          <SettingItem
+            icon={<BrainCircuit size={18} />}
+            label={t('settings.coreTraining.nLevel', { level: n_level })}
+          >
             <input
               type="range"
               id="n-level"
-              min="1"
-              max="9"
+              min={MIN_N_LEVEL}
+              max={MAX_N_LEVEL}
               value={n_level}
-              onChange={(e) => setSettings(s => ({ ...s, n_level: Number(e.target.value) }))}
+              onChange={(e) => handleSettingChange('n_level', Number(e.target.value))}
               className="slider"
             />
-          </div>
-          <div className="setting-item">
-            <div className="setting-label">
-              <Clock size={18} />
-              <span>{t('settings.coreTraining.speed', { speed: speed_ms })}</span>
-            </div>
+          </SettingItem>
+          <SettingItem
+            icon={<Clock size={18} />}
+            label={t('settings.coreTraining.speed', { speed: speed_ms })}
+          >
             <input
               type="range"
               id="speed"
               min={minSpeed}
-              max="5000"
+              max={MAX_SPEED}
               step="100"
               value={speed_ms}
-              onChange={(e) => setSettings(s => ({ ...s, speed_ms: Number(e.target.value) }))}
+              onChange={(e) => handleSettingChange('speed_ms', Number(e.target.value))}
               className="slider"
             />
-          </div>
-          <div className="setting-item">
-            <div className="setting-label">
-              <ListChecks size={18} />
-              <span>{t('settings.coreTraining.sessionLength', { length: session_length })}</span>
-            </div>
-            <input
-              type="range"
-              id="session-length"
-              min={minSessionLength}
-              max="100"
-              value={session_length}
-              onChange={(e) => setSettings(s => ({ ...s, session_length: Number(e.target.value) }))}
-              className={`slider ${isSessionLengthInvalid ? 'invalid' : ''}`}
-            />
-            {isSessionLengthInvalid && (
-              <div className="error-message">
-                {t('settings.coreTraining.sessionLengthError', { minLength: minSessionLength, nLevel: n_level })}
-              </div>
-            )}
-          </div>
+          </SettingItem>
+          <SettingItem
+            icon={<ListChecks size={18} />}
+            label={t('settings.coreTraining.sessionLength', { length: session_length })}
+          >
+            <>
+              <input
+                type="range"
+                id="session-length"
+                min={minSessionLength}
+                max={MAX_SESSION_LENGTH}
+                value={session_length}
+                onChange={(e) => handleSettingChange('session_length', Number(e.target.value))}
+                className={`slider ${isSessionLengthInvalid ? 'invalid' : ''}`}
+              />
+              {isSessionLengthInvalid && (
+                <div className="error-message">
+                  {t('settings.coreTraining.sessionLengthError', { minLength: minSessionLength, nLevel: n_level })}
+                </div>
+              )}
+            </>
+          </SettingItem>
         </Card>
 
         <Card className="settings-card">
@@ -184,33 +207,33 @@ const SettingsPage: React.FC = () => {
             <Monitor size={20} />
             {t('settings.interface.title')}
           </h2>
-          <div className="setting-item setting-item-row">
-            <div className="setting-label">
-              {theme === 'light' ? <Sun size={18} /> : <Moon size={18} />}
-              <span>{t('settings.interface.lightTheme')}</span>
-            </div>
+          <SettingItem
+            isRow
+            icon={theme === 'light' ? <Sun size={18} /> : <Moon size={18} />}
+            label={t('settings.interface.lightTheme')}
+          >
             <Switch
               id="theme-switcher"
               label=""
               checked={theme === 'light'}
-              onChange={(e) => setSettings(s => ({ ...s, theme: e.target.checked ? 'light' : 'dark' }))}
+              onChange={(e) => handleSettingChange('theme', e.target.checked ? 'light' : 'dark')}
             />
-          </div>
-          <div className="setting-item setting-item-row">
-            <div className="setting-label">
-              <Languages size={18} />
-              <span>{t('settings.interface.language')}</span>
-            </div>
+          </SettingItem>
+          <SettingItem
+            isRow
+            icon={<Languages size={18} />}
+            label={t('settings.interface.language')}
+          >
             <select
               id="language-select"
               className="select-input"
               value={language}
-              onChange={(e) => setSettings(s => ({ ...s, language: e.target.value }))}
+              onChange={(e) => handleSettingChange('language', e.target.value)}
             >
               <option value="en">English</option>
               <option value="zh_cn">简体中文</option>
             </select>
-          </div>
+          </SettingItem>
         </Card>
 
         <Card className="settings-card">
@@ -235,25 +258,32 @@ const SettingsPage: React.FC = () => {
             <Code size={20} />
             {t('settings.developer.title')}
           </h2>
-          <Switch
-            id="allow-fast-speed"
-            label={t('settings.developer.allowFastSpeed')}
-            checked={allowFastSpeed}
-            onChange={(e) => setSettings(s => ({ ...s, allowFastSpeed: e.target.checked }))}
-          />
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={handleGenerateHistory}
-            loading={isGeneratingHistory}
-          >
-            {t('settings.developer.generateHistory')}
-          </Button>
+          <div className="developer-options">
+            <SettingItem
+              isRow
+              icon={<Code size={18} />}
+              label={t('settings.developer.allowFastSpeed')}
+            >
+              <Switch
+                id="allow-fast-speed"
+                label=""
+                checked={allowFastSpeed}
+                onChange={(e) => handleSettingChange('allowFastSpeed', e.target.checked)}
+              />
+            </SettingItem>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleGenerateHistory}
+              loading={isGeneratingHistory}
+              className="btn-full-width"
+            >
+              <Beaker size={16} className="btn-icon" />
+              {t('settings.developer.generateHistory')}
+            </Button>
+          </div>
         </Card>
 
-        <div className="save-button-container">
-          {/* Save button removed for auto-save functionality */}
-        </div>
       </div>
     </div>
   );

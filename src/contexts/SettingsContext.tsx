@@ -92,7 +92,14 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   // Effect to apply theme and language changes globally
   useEffect(() => {
-    document.body.classList.toggle('light-theme', settings.theme === 'light');
+    // Apply theme class to the root element for global scope
+    const root = document.documentElement;
+    if (settings.theme === 'light') {
+      root.classList.add('light-theme');
+    } else {
+      root.classList.remove('light-theme');
+    }
+
     if (i18n.language !== settings.language) {
       i18n.changeLanguage(settings.language);
     }

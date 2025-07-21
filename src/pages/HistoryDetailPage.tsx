@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useParams, useLocation, Link } from 'react-router-dom';
+import { useTranslation, Trans } from 'react-i18next';
 import { invoke } from '@tauri-apps/api/core';
 import {
   BrainCircuit,
@@ -12,79 +12,56 @@ import {
   Eye,
   MousePointerClick,
   BookOpen,
+  Play,
 } from 'lucide-react';
 import Card from '../components/ui/Card';
+import Button from '../components/ui/Button';
 import ColorGridLegend from '../components/ColorGridLegend';
+import { GameSessionDetails, GameEvent, getCalculatedStats } from '../utils/stats';
+import { useSettings } from '../contexts/SettingsContext';
+import { useNavigate } from 'react-router-dom';
 import './HistoryDetailPage.css';
 
-// --- Data Structures mirroring Rust backend ---
-interface AccuracyStats {
-  true_positives: number;
-  true_negatives: number;
-  false_positives: number;
-  false_negatives: number;
-}
+const renderEvent = (event: GameEvent) => {
+  const visualMatchClass = event.is_visual_match ? 'match' : '';
+  const audioMatchClass = event.is_audio_match ? 'match' : '';
+  const visualUserClickClass = event.user_response.visual_match ? 'user-click-visual' : '';
+  const audioUserClickClass = event.user_response.audio_match ? 'user-click-audio' : '';
 
-interface Stimulus {
-  visual: number;
-  audio: string;
-}
-
-interface UserResponse {
-  visual_match: boolean;
-  audio_match: boolean;
-}
-
-interface GameEvent {
-  turn_index: number;
-  stimulus: Stimulus;
-  is_visual_match: boolean;
-  is_audio_match: boolean;
-  user_response: UserResponse;
-}
-
-interface UserSettings {
-  n_level: number;
-  speed_ms: number;
-  session_length: number;
-}
-
-interface GameSessionDetails {
-  id: string;
-  timestamp: string;
-  settings: UserSettings;
-  event_history: GameEvent[];
-  visual_stats: AccuracyStats;
-  audio_stats: AccuracyStats;
-}
-
-// --- Helper Functions for Stats ---
-const calculateRate = (numerator: number, denominator: number): number => {
-  if (denominator === 0) {
-    return numerator === 0 ? 100.0 : 0.0;
-  }
-  return (numerator / denominator) * 100;
+  return (
+    <div key={event.turn_index} className="event-item">
+      <div className="event-index">{event.turn_index + 1}</div>
+      <div className={`event-stimulus visual-stimulus ${visualMatchClass}`}>
+        <div className={`grid-cell-detail active-cell-detail cell-${event.stimulus.visual}`}>
+          <span className={visualUserClickClass}>{event.stimulus.visual}</span>
+        </div>
+      </div>
+      <div className={`event-stimulus audio-stimulus ${audioMatchClass} ${audioUserClickClass}`}>
+        {event.stimulus.audio}
+      </div>
+    </div>
+  );
 };
-
-const getCalculatedStats = (stats: AccuracyStats) => {
-  const totalMatches = stats.true_positives + stats.false_negatives;
-  const totalNonMatches = stats.true_negatives + stats.false_positives;
-
-  return {
-    hitRate: calculateRate(stats.true_positives, totalMatches),
-    missRate: calculateRate(stats.false_negatives, totalMatches),
-    falseAlarmRate: calculateRate(stats.false_positives, totalNonMatches),
-    correctRejectionRate: calculateRate(stats.true_negatives, totalNonMatches),
-  };
-};
-
 
 const HistoryDetailPage: React.FC = () => {
   const { sessionId } = useParams<{ sessionId: string }>();
   const { t } = useTranslation();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { settings, setSettings, saveSettings } = useSettings();
   const [session, setSession] = useState<GameSessionDetails | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const visualStats = useMemo(() => {
+    if (!session) return null;
+    return getCalculatedStats(session.visual_stats);
+  }, [session]);
+
+  const audioStats = useMemo(() => {
+    if (!session) return null;
+    return getCalculatedStats(session.audio_stats);
+  }, [session]);
 
   useEffect(() => {
     if (!sessionId) return;
@@ -117,34 +94,50 @@ const HistoryDetailPage: React.FC = () => {
     return <div>{error}</div>;
   }
 
-  if (!session) {
+  if (!session || !visualStats || !audioStats) {
     return <div>{t('historyDetail.noData')}</div>;
   }
 
-  const renderEvent = (event: GameEvent) => {
-    const visualMatchClass = event.is_visual_match ? 'match' : '';
-    const audioMatchClass = event.is_audio_match ? 'match' : '';
-    const visualUserClickClass = event.user_response.visual_match ? 'user-click-visual' : '';
-    const audioUserClickClass = event.user_response.audio_match ? 'user-click-audio' : '';
+  const isPostGameView = location.state?.fromGame === true;
 
-    return (
-      <div key={event.turn_index} className="event-item">
-        <div className="event-index">{event.turn_index + 1}</div>
-        <div className={`event-stimulus visual-stimulus ${visualMatchClass}`}>
-          <div className={`grid-cell-detail active-cell-detail cell-${event.stimulus.visual}`}>
-            <span className={visualUserClickClass}>{event.stimulus.visual}</span>
-          </div>
-        </div>
-        <div className={`event-stimulus audio-stimulus ${audioMatchClass} ${audioUserClickClass}`}>
-          {event.stimulus.audio}
-        </div>
-      </div>
-    );
+  const handlePlayAgain = async () => {
+    if (!session) return;
+    // Update the global settings with the settings from this session
+    setSettings({
+      ...settings, // Keep client-side settings like theme
+      n_level: session.settings.n_level,
+      speed_ms: session.settings.speed_ms,
+      session_length: session.settings.session_length,
+    });
+    // Persist the settings
+    await saveSettings();
+    // Navigate to the game page to start a new game
+    navigate('/');
   };
 
   return (
     <div className="history-detail-container">
       <h1 className="page-title">{t('historyDetail.title', { date: new Date(session.timestamp).toLocaleString() })}</h1>
+
+      <div className="detail-actions">
+        <Button onClick={handlePlayAgain}>
+          <Play size={16} className="btn-icon" />
+          {t('historyDetail.playAgainSameSettings')}
+        </Button>
+      </div>
+
+      {isPostGameView && (
+        <Card className="post-game-prompt-card">
+          <p>
+            <Trans
+              i18nKey="historyDetail.postGamePrompt"
+              components={[
+                <Link to="/history" className="history-link-inline" />,
+              ]}
+            />
+          </p>
+        </Card>
+      )}
 
       <Card className="detail-summary-card">
         <div className="summary-item"><BrainCircuit size={18} /><strong>{t('history.nLevel')}:</strong> {session.settings.n_level}</div>
@@ -155,17 +148,17 @@ const HistoryDetailPage: React.FC = () => {
       <Card className="stats-card">
         <div className="stats-column">
           <h3 className="stats-title"><Eye size={20} /> {t('history.visual')}</h3>
-          <div className="stat-item"><span>{t('historyDetail.stats.hitRate')}:</span> <span>{getCalculatedStats(session.visual_stats).hitRate.toFixed(1)}%</span></div>
-          <div className="stat-item"><span>{t('historyDetail.stats.missRate')}:</span> <span>{getCalculatedStats(session.visual_stats).missRate.toFixed(1)}%</span></div>
-          <div className="stat-item"><span>{t('historyDetail.stats.faRate')}:</span> <span>{getCalculatedStats(session.visual_stats).falseAlarmRate.toFixed(1)}%</span></div>
-          <div className="stat-item"><span>{t('historyDetail.stats.crRate')}:</span> <span>{getCalculatedStats(session.visual_stats).correctRejectionRate.toFixed(1)}%</span></div>
+          <div className="stat-item"><span>{t('historyDetail.stats.hitRate')}:</span> <span>{visualStats.hitRate.toFixed(1)}%</span></div>
+          <div className="stat-item"><span>{t('historyDetail.stats.missRate')}:</span> <span>{visualStats.missRate.toFixed(1)}%</span></div>
+          <div className="stat-item"><span>{t('historyDetail.stats.faRate')}:</span> <span>{visualStats.falseAlarmRate.toFixed(1)}%</span></div>
+          <div className="stat-item"><span>{t('historyDetail.stats.crRate')}:</span> <span>{visualStats.correctRejectionRate.toFixed(1)}%</span></div>
         </div>
         <div className="stats-column">
           <h3 className="stats-title"><Ear size={20} /> {t('history.audio')}</h3>
-          <div className="stat-item"><span>{t('historyDetail.stats.hitRate')}:</span> <span>{getCalculatedStats(session.audio_stats).hitRate.toFixed(1)}%</span></div>
-          <div className="stat-item"><span>{t('historyDetail.stats.missRate')}:</span> <span>{getCalculatedStats(session.audio_stats).missRate.toFixed(1)}%</span></div>
-          <div className="stat-item"><span>{t('historyDetail.stats.faRate')}:</span> <span>{getCalculatedStats(session.audio_stats).falseAlarmRate.toFixed(1)}%</span></div>
-          <div className="stat-item"><span>{t('historyDetail.stats.crRate')}:</span> <span>{getCalculatedStats(session.audio_stats).correctRejectionRate.toFixed(1)}%</span></div>
+          <div className="stat-item"><span>{t('historyDetail.stats.hitRate')}:</span> <span>{audioStats.hitRate.toFixed(1)}%</span></div>
+          <div className="stat-item"><span>{t('historyDetail.stats.missRate')}:</span> <span>{audioStats.missRate.toFixed(1)}%</span></div>
+          <div className="stat-item"><span>{t('historyDetail.stats.faRate')}:</span> <span>{audioStats.falseAlarmRate.toFixed(1)}%</span></div>
+          <div className="stat-item"><span>{t('historyDetail.stats.crRate')}:</span> <span>{audioStats.correctRejectionRate.toFixed(1)}%</span></div>
         </div>
       </Card>
 

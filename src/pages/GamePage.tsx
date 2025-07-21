@@ -1,15 +1,17 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
-import { useTranslation, Trans } from 'react-i18next';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { invoke } from '@tauri-apps/api/core';
 import { useSettings } from '../contexts/SettingsContext';
-import { Link } from 'react-router-dom';
 import { BrainCircuit, Timer, Target, Ear, AlertCircle, History } from 'lucide-react';
 
 import Button from '../components/ui/Button';
 import Grid from '../components/Grid';
 import GameControls, { FeedbackState } from '../components/GameControls';
 import GameHeader from '../components/GameHeader';
-import { InfoPanel, Stat } from '../components/InfoPanel';
+import Card from '../components/ui/Card';
+import Stat from '../components/ui/Stat';
+import { GameSessionSummary } from '../utils/stats'; // Import for type safety
 import './GamePage.css';
 
 // --- Data Structures mirroring Rust backend ---
@@ -45,12 +47,14 @@ interface UserResponse {
 
 const GamePage: React.FC = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { settings: contextSettings, isLoading: settingsLoading } = useSettings();
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isPostGame, setIsPostGame] = useState(false); // State to manage post-game summary view
+  const [isTransitioning, setIsTransitioning] = useState(false);
   const userResponseRef = useRef<UserResponse>({ visual_match: false, audio_match: false });
   const previousMatchStatusRef = useRef({ isVisualMatch: false, isAudioMatch: false });
+  const gameLoopTimerRef = useRef<number | null>(null);
   
   // State for immediate feedback
   const [hasRespondedVisual, setHasRespondedVisual] = useState(false);
@@ -59,42 +63,26 @@ const GamePage: React.FC = () => {
   const [audioFeedback, setAudioFeedback] = useState<FeedbackState>(null);
   const [positionMissed, setPositionMissed] = useState(false);
   const [audioMissed, setAudioMissed] = useState(false);
-
-  // --- Debugging Effect ---
-  useEffect(() => {
-    if (gameState && gameState.isRunning) {
-      const visual = gameState.currentStimulus?.visual_stimulus.position;
-      const audio = gameState.currentStimulus?.audio_stimulus.letter;
-      console.log(
-        `Turn ${gameState.currentTurnIndex}: Visual Stimulus -> ${visual ?? 'N/A'}, Audio Stimulus -> ${audio ?? 'N/A'}`
-      );
-    }
-  }, [gameState]);
+  const audioCache = useRef<Record<string, HTMLAudioElement>>({});
 
   // --- Audio Playback Effect ---
   useEffect(() => {
-    // Only play sounds if the game is actively running.
-    if (gameState && gameState.isRunning) {
+    if (gameState?.isRunning) {
       const letter = gameState.currentStimulus?.audio_stimulus.letter;
       if (letter) {
-        const playSound = () => {
-          try {
-            const soundName = `letter_${letter}.mp3`;
-            // Assets in `public` are served from the root.
-            const audioSrc = `/sounds/${soundName}`;
-            
-            const audio = new Audio(audioSrc);
-            audio.play().catch(e => {
-              console.error(`Error playing ${audioSrc}:`, e);
-            });
-          } catch (error) {
-            console.error("Error preparing audio:", error);
-          }
-        };
-        playSound();
+        const soundName = `letter_${letter}.mp3`;
+        const audioSrc = `/sounds/${soundName}`;
+
+        let audio = audioCache.current[audioSrc];
+        if (!audio) {
+          audio = new Audio(audioSrc);
+          audioCache.current[audioSrc] = audio;
+        }
+        
+        audio.play().catch(e => console.error(`Error playing ${audioSrc}:`, e));
       }
     }
-  }, [gameState?.currentStimulus, gameState?.isRunning]); // Depend on the stimulus object
+  }, [gameState?.currentStimulus, gameState?.isRunning]);
 
   // --- Missed Feedback Effect ---
   useEffect(() => {
@@ -121,8 +109,6 @@ const GamePage: React.FC = () => {
       return;
     }
 
-    // Store the match status for the current turn before the timer starts.
-    // This will be used to check for misses after the turn ends.
     previousMatchStatusRef.current = {
       isVisualMatch: gameState.isVisualMatch,
       isAudioMatch: gameState.isAudioMatch,
@@ -130,9 +116,8 @@ const GamePage: React.FC = () => {
 
     const gameSpeed = gameState.settings.speed_ms;
 
-    const timerId = setTimeout(async () => {
+    gameLoopTimerRef.current = window.setTimeout(async () => {
       try {
-        // --- Missed Match Detection for the turn that just finished ---
         if (gameState.currentTurnIndex > 0) {
           if (previousMatchStatusRef.current.isVisualMatch && !userResponseRef.current.visual_match) {
             setPositionMissed(true);
@@ -142,14 +127,11 @@ const GamePage: React.FC = () => {
           }
         }
 
-        // Submit the input for the current turn.
         await invoke('submit_user_input', { userResponse: userResponseRef.current });
         userResponseRef.current = { visual_match: false, audio_match: false };
 
-        // Get the state for the *next* turn.
         const newState = await invoke<GameState>('get_game_state');
 
-        // The backend has now determined if the game should continue.
         if (newState.isRunning) {
           setGameState(newState);
           setHasRespondedVisual(false);
@@ -157,13 +139,28 @@ const GamePage: React.FC = () => {
           setPositionFeedback(null);
           setAudioFeedback(null);
         } else {
-          // The game is over. The backend has sent the final stats.
+          // Game is over. Update state and set transitioning flag to prevent UI flash.
           setGameState(s => s ? { ...s, isRunning: false } : null);
-
-          setTimeout(() => {
-            setGameState(newState);
-            setIsPostGame(true);
-          }, gameSpeed);
+          setIsTransitioning(true);
+          
+          // Use a new timer that is NOT tracked by the effect's cleanup ref.
+          // This ensures the navigation is not cancelled by the re-render.
+          setTimeout(async () => {
+            try {
+              // Add a small delay to ensure the session is persisted before fetching.
+              await new Promise(resolve => setTimeout(resolve, 100));
+              const history = await invoke<GameSessionSummary[]>('get_game_history');
+              if (history.length > 0) {
+                const latestSession = [...history].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
+                navigate(`/results/${latestSession.id}`, { state: { fromGame: true } });
+              } else {
+                navigate('/'); // Fallback if history is empty
+              }
+            } catch (e) {
+              console.error("Failed to fetch history after game:", e);
+              navigate('/'); // Fallback on error
+            }
+          }, 500);
         }
       } catch (error) {
         console.error("Failed to advance turn:", error);
@@ -171,12 +168,16 @@ const GamePage: React.FC = () => {
       }
     }, gameSpeed);
 
-    return () => clearTimeout(timerId);
-  }, [gameState]); // Re-run this effect whenever the gameState object itself changes.
+    return () => {
+      if (gameLoopTimerRef.current) {
+        clearTimeout(gameLoopTimerRef.current);
+      }
+    };
+  }, [gameState, navigate]);
 
   const handleStartGame = useCallback(async () => {
     setIsLoading(true);
-    setIsPostGame(false); // Reset post-game state
+    setIsTransitioning(false); // Reset transitioning state
     try {
       await invoke('start_game');
       const newState = await invoke<GameState>('get_game_state');
@@ -216,52 +217,20 @@ const GamePage: React.FC = () => {
       return <p>{t('settings.loading')}</p>;
     }
 
-    // Post-Game Summary View
-    if (isPostGame && gameState) {
-      return (
-        <div className="post-game-container">
-          <InfoPanel title={t('game.postGameTitle')}>
-            <div className="stats-group-horizontal">
-              <Stat icon={<Target />} label={t('history.visualHitRate')} value={`${(gameState.visualHitRate * 100).toFixed(1)}%`} />
-              <Stat icon={<AlertCircle />} label={t('history.visualFaRate')} value={`${(gameState.visualFalseAlarmRate * 100).toFixed(1)}%`} />
-            </div>
-            <div className="stats-group-horizontal">
-              <Stat icon={<Ear />} label={t('history.audioHitRate')} value={`${(gameState.audioHitRate * 100).toFixed(1)}%`} />
-              <Stat icon={<AlertCircle />} label={t('history.audioFaRate')} value={`${(gameState.audioFalseAlarmRate * 100).toFixed(1)}%`} />
-            </div>
-          </InfoPanel>
-          <p className="history-prompt">
-            <Trans
-              i18nKey="game.historyPrompt"
-              values={{ historyLink: t('nav.history') }}
-              components={[
-                <Link to="/history" className="history-link">
-                  <History size={16} />
-                </Link>
-              ]}
-            />
-          </p>
-          <Button onClick={handleStartGame} loading={isLoading}>
-            {t('game.playAgain')}
-          </Button>
-        </div>
-      );
-    }
-
     // Pre-Game View
-    if (!gameState) {
+    if (!gameState || (!gameState.isRunning && !isTransitioning)) {
       return (
-        <>
-          <InfoPanel>
+        <div className="pre-game-container">
+          <Card className="pre-game-card">
             <div className="stats-group-horizontal">
               <Stat icon={<BrainCircuit />} label={t('gameStatus.nLevel')} value={contextSettings.n_level} />
               <Stat icon={<Timer />} label={t('gameStatus.speed')} value={`${contextSettings.speed_ms}ms`} />
             </div>
-          </InfoPanel>
-          <Button onClick={handleStartGame} loading={isLoading}>
+          </Card>
+          <Button onClick={handleStartGame} loading={isLoading} variant="primary" className="start-game-btn">
             {t('game.startGame')}
           </Button>
-        </>
+        </div>
       );
     }
 

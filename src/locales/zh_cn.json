@@ -84,7 +84,9 @@
       "missRate": "漏报率",
       "faRate": "虚警率",
       "crRate": "正确拒绝率"
-    }
+    },
+    "postGamePrompt": "这是一局刚刚结束的游戏。你可以在<0>历史记录</0>页面随时回顾。",
+    "playAgainSameSettings": "使用相同设置再来一局"
   },
   "game": {
     "title": "Dual N-Back",

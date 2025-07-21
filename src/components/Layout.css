@@ -1,0 +1,123 @@
+/* App Layout */
+.app-container {
+  display: flex;
+  height: 100vh;
+}
+
+.sidebar {
+  width: 220px;
+  background-color: var(--sidebar-color);
+  padding: 1.5rem 1rem;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--hover-color);
+}
+
+.sidebar-header {
+  margin-bottom: 2rem;
+}
+
+.sidebar-header h2 {
+  margin: 0;
+  text-align: center;
+  font-size: 1.5rem;
+  color: var(--text-color);
+}
+
+.nav-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem; /* Add gap for vertical spacing */
+}
+
+.nav-links li a {
+  display: flex;
+  align-items: center;
+  padding: 0.8rem 1rem;
+  border-radius: var(--border-radius-medium);
+  text-decoration: none;
+  color: var(--text-color);
+  font-weight: 500;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.nav-links li a:hover {
+  background-color: var(--hover-color);
+}
+
+.nav-links li a.active {
+  background-color: var(--accent-color);
+  color: var(--background-color);
+}
+
+.nav-links li a svg {
+  margin-right: 0.8rem;
+}
+
+.content {
+  flex-grow: 1;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .app-container {
+    flex-direction: column-reverse;
+  }
+
+  .sidebar {
+    width: 100%;
+    height: 60px;
+    padding: 0 1rem;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-around;
+    border-right: none;
+    border-top: 1px solid var(--hover-color);
+  }
+
+  .sidebar-header {
+    display: none; /* Hide header on small screens */
+  }
+
+  .nav-links {
+    display: flex;
+    flex-direction: row;
+    align-items: center; /* Ensure vertical alignment */
+    justify-content: space-around;
+    width: 100%;
+    height: 100%; /* Make nav fill the bar */
+    gap: 1rem; /* Add gap for horizontal spacing */
+  }
+
+  .nav-links li {
+    display: flex;
+    align-items: center;
+    height: 100%;
+  }
+
+  .nav-links li a {
+    justify-content: center;
+    width: 44px;  /* Set fixed width */
+    height: 44px; /* Set fixed height */
+    padding: 0;   /* Remove padding */
+    box-sizing: border-box;
+  }
+
+  .nav-links li a span {
+    display: none; /* Hide text on small screens */
+  }
+
+  .nav-links li a svg {
+    margin-right: 0;
+  }
+
+  .content {
+    padding-bottom: 70px; /* Add padding to avoid overlap with bottom bar */
+  }
+}

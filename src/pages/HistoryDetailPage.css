@@ -4,6 +4,30 @@
   padding-bottom: 2rem;
 }
 
+.post-game-prompt-card {
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.5rem;
+  background-color: var(--hover-color);
+  border-left: 4px solid var(--accent-color);
+  font-size: 1rem;
+}
+
+.post-game-prompt-card p {
+  margin: 0;
+}
+
+.history-link-inline {
+  color: var(--accent-color);
+  text-decoration: underline;
+  font-weight: 500;
+}
+
+.detail-actions {
+  margin-bottom: 1.5rem;
+  display: flex;
+  justify-content: center;
+}
+
 .detail-summary-card {
   display: flex;
   justify-content: space-around;
@@ -47,18 +71,18 @@
   font-size: 1.2rem;
 }
 
-.stat-item {
+.stats-column .stat-item {
   display: flex;
   justify-content: space-between;
   padding: 0.25rem 0;
   border-bottom: 1px solid var(--hover-color);
 }
 
-.stat-item:last-child {
+.stats-column .stat-item:last-child {
   border-bottom: none;
 }
 
-.stat-item span:last-child {
+.stats-column .stat-item span:last-child {
   font-weight: bold;
 }
 
