@@ -86,11 +86,24 @@ const HistoryPage: React.FC = () => {
   const nLevelChangePoints = useMemo(() => {
     return chartData.reduce((acc, session, index, arr) => {
       if (index > 0 && session.nLevel !== arr[index - 1].nLevel) {
-        acc.push({ x: session.date, nLevel: session.nLevel });
+        acc.push({ x: index, nLevel: session.nLevel });
       }
       return acc;
-    }, [] as { x: string; nLevel: number }[]);
+    }, [] as { x: number; nLevel: number }[]);
   }, [chartData]);
+
+  const dailyTicks = useMemo(() => {
+    const ticks: number[] = [];
+    const seenDates = new Set<string>();
+    chartData.forEach(item => {
+      if (!seenDates.has(item.date)) {
+        seenDates.add(item.date);
+        ticks.push(item.x);
+      }
+    });
+    return ticks;
+  }, [chartData]);
+
 
   const chartMinWidth = 700;
   const pointWidth = 30;
@@ -139,7 +152,17 @@ const HistoryPage: React.FC = () => {
             <Card className="chart-card">
               <LineChart width={dynamicChartWidth} height={300} data={chartData} margin={{ top: 20, right: 20, left: 0, bottom: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={themeColors.hoverColor} />
-                <XAxis dataKey="date" stroke={themeColors.textColor} angle={-30} textAnchor="end" height={50} />
+                <XAxis
+                  dataKey="x"
+                  type="number"
+                  domain={['dataMin', 'dataMax']}
+                  ticks={dailyTicks}
+                  tickFormatter={(tick) => chartData[tick]?.date || ''}
+                  stroke={themeColors.textColor}
+                  angle={-30}
+                  textAnchor="end"
+                  height={50}
+                />
                 <YAxis stroke={themeColors.textColor} domain={[50, 100]} unit="%" />
                 <Tooltip
                   formatter={tooltipValueFormatter}
@@ -149,8 +172,8 @@ const HistoryPage: React.FC = () => {
                   }}
                 />
                 {nLevelChangePoints.map((p, i) => (
-                  <ReferenceLine key={i} x={p.x} stroke={themeColors.accentColor} strokeDasharray="3 3">
-                    <Label value={`N=${p.nLevel}`} position="insideTopRight" fill={themeColors.accentColor} fontSize={12} />
+                  <ReferenceLine key={i} x={p.x} stroke={themeColors.accentColor} strokeDasharray="3 3" ifOverflow="visible">
+                    <Label value={`N=${p.nLevel}`} position="top" fill={themeColors.accentColor} fontSize={12} />
                   </ReferenceLine>
                 ))}
                 <Line type="monotone" dataKey="visualHitRate" name={t('history.visualHitRate')} stroke={themeColors.line1} strokeWidth={2} activeDot={{ r: 6 }} dot={{ r: 3 }} legendType="none" />
@@ -175,7 +198,17 @@ const HistoryPage: React.FC = () => {
             <Card className="chart-card">
               <LineChart width={dynamicChartWidth} height={300} data={chartData} margin={{ top: 20, right: 20, left: 0, bottom: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={themeColors.hoverColor} />
-                <XAxis dataKey="date" stroke={themeColors.textColor} angle={-30} textAnchor="end" height={50} />
+                <XAxis
+                  dataKey="x"
+                  type="number"
+                  domain={['dataMin', 'dataMax']}
+                  ticks={dailyTicks}
+                  tickFormatter={(tick) => chartData[tick]?.date || ''}
+                  stroke={themeColors.textColor}
+                  angle={-30}
+                  textAnchor="end"
+                  height={50}
+                />
                 <YAxis stroke={themeColors.textColor} domain={[0, 100]} unit="%" />
                 <Tooltip
                   formatter={tooltipValueFormatter}
@@ -184,6 +217,11 @@ const HistoryPage: React.FC = () => {
                     borderColor: themeColors.hoverColor,
                   }}
                 />
+                {nLevelChangePoints.map((p, i) => (
+                  <ReferenceLine key={i} x={p.x} stroke={themeColors.accentColor} strokeDasharray="3 3" ifOverflow="visible">
+                    <Label value={`N=${p.nLevel}`} position="top" fill={themeColors.accentColor} fontSize={12} />
+                  </ReferenceLine>
+                ))}
                 <Line type="monotone" dataKey="visualFalseAlarmRate" name={t('history.visualFaRate')} stroke={themeColors.line3} strokeWidth={2} activeDot={{ r: 6 }} dot={{ r: 3 }} legendType="none" />
                 <Line type="monotone" dataKey="audioFalseAlarmRate" name={t('history.audioFaRate')} stroke={themeColors.line4} strokeWidth={2} activeDot={{ r: 6 }} dot={{ r: 3 }} legendType="none" />
               </LineChart>
@@ -207,7 +245,17 @@ const HistoryPage: React.FC = () => {
             <Card className="chart-card">
               <ComposedChart width={dynamicChartWidth} height={300} data={chartData} margin={{ top: 20, right: 20, left: 0, bottom: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={themeColors.hoverColor} />
-                <XAxis dataKey="date" stroke={themeColors.textColor} angle={-30} textAnchor="end" height={50} />
+                <XAxis
+                  dataKey="x"
+                  type="number"
+                  domain={['dataMin', 'dataMax']}
+                  ticks={dailyTicks}
+                  tickFormatter={(tick) => chartData[tick]?.date || ''}
+                  stroke={themeColors.textColor}
+                  angle={-30}
+                  textAnchor="end"
+                  height={50}
+                />
                 <YAxis yAxisId="left" label={{ value: 'N-Level / Length', angle: -90, position: 'insideLeft', fill: themeColors.textColor }} stroke={themeColors.textColor} />
                 <YAxis yAxisId="right" orientation="right" label={{ value: 'Speed (ms)', angle: 90, position: 'insideRight', fill: themeColors.textColor }} stroke={themeColors.textColor} />
                 <Tooltip

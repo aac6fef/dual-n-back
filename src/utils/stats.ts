@@ -75,8 +75,9 @@ export const calculateFalseAlarmRate = (stats: AccuracyStats): number => {
 };
 
 export const transformHistoryData = (sessions: GameSessionSummary[]) => {
-  return sessions.map(session => ({
+  return sessions.map((session, index) => ({
     id: session.id,
+    x: index, // Use index for even spacing on the x-axis
     date: new Date(session.timestamp).toLocaleDateString(),
     nLevel: session.settings.n_level,
     speed: session.settings.speed_ms,
