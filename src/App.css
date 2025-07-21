@@ -63,6 +63,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
 /* Global Page Title */
 .page-title {
   text-align: center;

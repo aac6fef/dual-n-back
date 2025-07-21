@@ -1,6 +1,10 @@
 # Update Log
 
 [**中文更新日志 (Chinese Update Log)**](update_log_cn.md)
+## v0.1.14
+- **[Fix/Layout]** Resolved an issue on Android where the app's page was larger than the available area, causing the entire application to move with finger swipes.
+- **[Fix/Layout]** Fixed a bug on all platforms that allowed the entire page to be scrolled horizontally, which caused UI elements to move unexpectedly.
+
 ## v0.1.13
 - **[Feature/System Integration]** The application now automatically detects the operating system's theme (light/dark) and applies it on launch.
 - **[Feature]** Added a "Follow System Theme" toggle in the settings, allowing users to enable or disable this automatic theme synchronization.
@@ -100,13 +104,9 @@
 
 ## Roadmap
 
-### Feature Enhancements
-- **System Integration**: Automatically sync with the operating system's language and theme (dark/light) settings.
 
 ### UI/UX Improvements
 - **Response Latency**: Address the minor delay in button responsiveness to improve the tactile feel.
-- **Mobile Layout**: Fix the issue where an empty space occasionally appears at the bottom of the mobile view when scrolling.
-- **History Cards**: Redesign the summary cards on the history page to optimize their layout and information density.
 
 ### Core Algorithm
 - **New Algorithm Implementation**: Develop and integrate a more scientifically robust training algorithm to replace the current basic implementation.
