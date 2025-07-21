@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 import { locale } from '@tauri-apps/plugin-os';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useTranslation } from 'react-i18next';
@@ -16,6 +17,7 @@ export interface AppSettings extends UserSettings {
   theme: string;
   language: string;
   followSystemLanguage: boolean;
+  followSystemTheme: boolean;
   allowFastSpeed: boolean;
   reduceMotion: boolean;
   positionKeys: string[];
@@ -33,6 +35,7 @@ const defaultSettings: AppSettings = {
   theme: 'dark',
   language: 'en',
   followSystemLanguage: true,
+  followSystemTheme: true,
   allowFastSpeed: false,
   reduceMotion: false,
   positionKeys: ['p', 'h', '[', 'ArrowRight'],
@@ -67,6 +70,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [theme, setTheme] = useLocalStorage('settings:theme', defaultSettings.theme);
   const [language, setLanguage] = useLocalStorage('settings:language', defaultSettings.language);
   const [followSystemLanguage, setFollowSystemLanguage] = useLocalStorage('settings:followSystemLanguage', defaultSettings.followSystemLanguage);
+  const [followSystemTheme, setFollowSystemTheme] = useLocalStorage('settings:followSystemTheme', defaultSettings.followSystemTheme);
   const [allowFastSpeed, setAllowFastSpeed] = useLocalStorage('settings:allowFastSpeed', defaultSettings.allowFastSpeed);
   const [reduceMotion, setReduceMotion] = useLocalStorage('settings:reduceMotion', defaultSettings.reduceMotion);
   const [positionKeys, setPositionKeys] = useLocalStorage('settings:positionKeys', defaultSettings.positionKeys);
@@ -84,6 +88,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
         theme,
         language,
         followSystemLanguage,
+        followSystemTheme,
         allowFastSpeed,
         reduceMotion,
         positionKeys,
@@ -101,6 +106,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
         theme,
         language,
         followSystemLanguage,
+        followSystemTheme,
         allowFastSpeed,
         reduceMotion,
         positionKeys,
@@ -123,8 +129,8 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   // Sync local storage values with the main settings state
   useEffect(() => {
-    setSettings(prev => ({ ...prev, theme, language, followSystemLanguage, allowFastSpeed, reduceMotion, positionKeys, audioKeys, autoAdjustNLevel, highAccuracyThreshold, lowAccuracyThreshold }));
-  }, [theme, language, followSystemLanguage, allowFastSpeed, reduceMotion, positionKeys, audioKeys, autoAdjustNLevel, highAccuracyThreshold, lowAccuracyThreshold]);
+    setSettings(prev => ({ ...prev, theme, language, followSystemLanguage, followSystemTheme, allowFastSpeed, reduceMotion, positionKeys, audioKeys, autoAdjustNLevel, highAccuracyThreshold, lowAccuracyThreshold }));
+  }, [theme, language, followSystemLanguage, followSystemTheme, allowFastSpeed, reduceMotion, positionKeys, audioKeys, autoAdjustNLevel, highAccuracyThreshold, lowAccuracyThreshold]);
 
   // Effect to apply theme and language changes globally
   useEffect(() => {
@@ -166,6 +172,36 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
   }, [settings.followSystemLanguage, isLoading]);
 
+  // Effect to sync with system theme when the toggle is turned on
+  useEffect(() => {
+    if (isLoading) {
+      return;
+    }
+
+    if (settings.followSystemTheme) {
+      const syncTheme = async () => {
+        const systemTheme = await getCurrentWindow().theme();
+        if (systemTheme && settings.theme !== systemTheme) {
+          setSettings(prev => ({ ...prev, theme: systemTheme }));
+        }
+      };
+      syncTheme();
+
+      const unlistenPromise = getCurrentWindow().onThemeChanged(({ payload: newTheme }) => {
+        setSettings(prev => {
+          if (prev.followSystemTheme) {
+            return { ...prev, theme: newTheme };
+          }
+          return prev;
+        });
+      });
+
+      return () => {
+        unlistenPromise.then(unlisten => unlisten());
+      };
+    }
+  }, [settings.followSystemTheme, isLoading]);
+
   const isDirty = JSON.stringify(initialState) !== JSON.stringify(settings);
 
   const saveSettings = async () => {
@@ -180,6 +216,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
     setTheme(settings.theme);
     setLanguage(settings.language);
     setFollowSystemLanguage(settings.followSystemLanguage);
+    setFollowSystemTheme(settings.followSystemTheme);
     setAllowFastSpeed(settings.allowFastSpeed);
     setReduceMotion(settings.reduceMotion);
     setPositionKeys(settings.positionKeys);
@@ -199,6 +236,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
     setTheme(defaultSettings.theme);
     setLanguage(defaultSettings.language);
     setFollowSystemLanguage(defaultSettings.followSystemLanguage);
+    setFollowSystemTheme(defaultSettings.followSystemTheme);
     setAllowFastSpeed(defaultSettings.allowFastSpeed);
     setReduceMotion(defaultSettings.reduceMotion);
     setPositionKeys(defaultSettings.positionKeys);

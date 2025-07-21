@@ -1,6 +1,12 @@
 # Update Log
 
 [**中文更新日志 (Chinese Update Log)**](update_log_cn.md)
+## v0.1.13
+- **[Feature/System Integration]** The application now automatically detects the operating system's theme (light/dark) and applies it on launch.
+- **[Feature]** Added a "Follow System Theme" toggle in the settings, allowing users to enable or disable this automatic theme synchronization.
+- **[UI/UX]** When a user manually selects a theme, the "Follow System Theme" toggle is automatically disabled.
+- **[UI/UX]** When the "Follow System Theme" toggle is re-enabled, the application theme immediately syncs with the current system theme.
+
 ## v0.1.12
 - **[Feature/System Integration]** The application now automatically detects the operating system's language on first launch and sets it as the default.
 - **[Feature]** Added a "Follow System Language" toggle in the settings, allowing users to enable or disable this behavior.

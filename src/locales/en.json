@@ -21,6 +21,7 @@
       "visualFeedback": "Visual Feedback",
       "lightTheme": "Light Theme",
       "language": "Language",
+      "followSystemTheme": "Follow System Theme",
       "followSystemLanguage": "Follow System Language",
       "reduceMotion": "Reduce Motion"
     },

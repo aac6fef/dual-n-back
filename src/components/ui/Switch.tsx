@@ -6,14 +6,15 @@ interface SwitchProps {
   label: string;
   checked: boolean;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  disabled?: boolean;
 }
 
-const Switch: React.FC<SwitchProps> = ({ id, label, checked, onChange }) => {
+const Switch: React.FC<SwitchProps> = ({ id, label, checked, onChange, disabled = false }) => {
   return (
-    <div className="switch-control">
+    <div className={`switch-control ${disabled ? 'disabled' : ''}`}>
       <label htmlFor={id}>{label}</label>
       <label className="switch">
-        <input id={id} type="checkbox" checked={checked} onChange={onChange} />
+        <input id={id} type="checkbox" checked={checked} onChange={onChange} disabled={disabled} />
         <span className="slider-round"></span>
       </label>
     </div>

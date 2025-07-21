@@ -50,7 +50,7 @@ const SettingsPage: React.FC = () => {
   const [isListening, setIsListening] = useState<string | null>(null);
   const isInitialMount = useRef(true);
 
-  const { n_level, speed_ms, session_length, theme, language, allowFastSpeed, reduceMotion, positionKeys, audioKeys, autoAdjustNLevel, highAccuracyThreshold, lowAccuracyThreshold } = settings;
+  const { n_level, speed_ms, session_length, theme, language, followSystemTheme, allowFastSpeed, reduceMotion, positionKeys, audioKeys, autoAdjustNLevel, highAccuracyThreshold, lowAccuracyThreshold } = settings;
 
   const minSpeed = allowFastSpeed ? MIN_SPEED_FAST : MIN_SPEED_NORMAL;
   const minSessionLength = Math.max(MIN_SESSION_BASE, SESSION_LENGTH_FACTOR * n_level);
@@ -119,6 +119,11 @@ const SettingsPage: React.FC = () => {
     // Handle language change specially to provide immediate feedback
     if (key === 'language') {
       setSettings(prev => ({ ...prev, language: value, followSystemLanguage: false }));
+      return;
+    }
+
+    if (key === 'theme') {
+      setSettings(prev => ({ ...prev, theme: value, followSystemTheme: false }));
       return;
     }
 
@@ -346,6 +351,19 @@ const SettingsPage: React.FC = () => {
               label=""
               checked={theme === 'light'}
               onChange={(e) => handleSettingChange('theme', e.target.checked ? 'light' : 'dark')}
+              disabled={settings.followSystemTheme}
+            />
+          </SettingItem>
+          <SettingItem
+            isRow
+            icon={<Monitor size={18} />}
+            label={t('settings.interface.followSystemTheme')}
+          >
+            <Switch
+              id="follow-system-theme-switcher"
+              label=""
+              checked={followSystemTheme}
+              onChange={(e) => handleSettingChange('followSystemTheme', e.target.checked)}
             />
           </SettingItem>
           <SettingItem

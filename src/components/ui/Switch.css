@@ -59,3 +59,13 @@ input:focus + .slider-round {
 input:checked + .slider-round:before {
   transform: translateX(20px);
 }
+
+/* Disabled state */
+.switch-control.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.switch-control.disabled .slider-round {
+  cursor: not-allowed;
+}
