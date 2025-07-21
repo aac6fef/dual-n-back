@@ -61,14 +61,6 @@ impl AccuracyStats {
         }
     }
 
-    pub fn calculate_hit_rate(&self) -> f32 {
-        let total_matches = self.true_positives + self.false_negatives;
-        if total_matches == 0 {
-            0.0 // Or 1.0 if you want to represent "perfectly avoided non-existent matches"
-        } else {
-            self.true_positives as f32 / total_matches as f32
-        }
-    }
 
     /// Calculates the False Alarm Rate.
     /// Formula: False Positives / (False Positives + True Negatives)

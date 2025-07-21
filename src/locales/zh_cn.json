@@ -50,7 +50,8 @@
     "title": "N-Back",
     "game": "游戏",
     "settings": "设置",
-    "history": "历史"
+    "history": "历史",
+    "back": "返回"
   },
   "gameStatus": {
     "nLevel": "N-Level",

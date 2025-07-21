@@ -13,6 +13,7 @@ import {
   MousePointerClick,
   BookOpen,
   Play,
+  ArrowLeft,
 } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -117,7 +118,12 @@ const HistoryDetailPage: React.FC = () => {
 
   return (
     <div className="history-detail-container">
-      <h1 className="page-title">{t('historyDetail.title', { date: new Date(session.timestamp).toLocaleString() })}</h1>
+      <div className="history-detail-header">
+        <Button onClick={() => navigate(-1)} className="back-button" title={t('nav.back')}>
+          <ArrowLeft size={20} />
+        </Button>
+        <h1 className="page-title">{t('historyDetail.title', { date: new Date(session.timestamp).toLocaleString() })}</h1>
+      </div>
 
       <div className="detail-actions">
         <Button onClick={handlePlayAgain}>

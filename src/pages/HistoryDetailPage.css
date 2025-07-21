@@ -4,6 +4,35 @@
   padding-bottom: 2rem;
 }
 
+.history-detail-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  position: relative;
+  justify-content: center;
+}
+
+.history-detail-header .page-title {
+  margin: 0;
+  font-size: 1.8rem;
+  color: var(--text-color-primary);
+}
+
+.back-button {
+  position: absolute;
+  left: 0;
+  padding: 0.5rem 0.8rem;
+  background-color: var(--hover-color);
+  color: var(--text-color);
+  border: 1px solid var(--card-border-color);
+}
+
+.back-button:hover {
+  background-color: var(--accent-color);
+  color: var(--background-color);
+  border-color: var(--accent-color);
+}
+
 .post-game-prompt-card {
   margin-bottom: 1.5rem;
   padding: 1rem 1.5rem;

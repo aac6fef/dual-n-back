@@ -1,8 +1,8 @@
 # Update Log
 
 [**中文更新日志 (Chinese Update Log)**](update_log_cn.md)
-
 ## v0.1.11
+- **[Feature]** Added a back button to the history detail page for easy navigation.
 - **[Feature]** Added an intelligent difficulty adjustment feature. The system will now prompt the user to increase or decrease the N-Back level based on their performance.
 - **[Feature]** The intelligent difficulty adjustment feature can be enabled or disabled in the settings. The accuracy thresholds for triggering the suggestions are also configurable.
 - **[Feature]** The difficulty adjustment prompt is now a confirmation dialog, allowing the user to accept or decline the suggestion.
@@ -89,7 +89,6 @@
 
 ### Feature Enhancements
 - **System Integration**: Automatically sync with the operating system's language and theme (dark/light) settings.
-- **Exit Functionality**: Add a convenient back/exit function to the history detail page.
 
 ### UI/UX Improvements
 - **Response Latency**: Address the minor delay in button responsiveness to improve the tactile feel.
