@@ -33,7 +33,8 @@
       "title": "按键绑定",
       "position": "位置 (视觉)",
       "audio": "音频 (声音)",
-      "listening": "请按任意键..."
+      "listening": "请按任意键...",
+      "addTitle": "添加新按键"
     },
     "saveButton": "保存设置",
     "saveSuccess": "已保存！",

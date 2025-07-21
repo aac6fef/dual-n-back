@@ -1,53 +1,123 @@
 .keybinding-settings {
-  margin-bottom: 1rem;
+  background-color: var(--panel-bg);
+  border-radius: var(--border-radius-large);
+  padding: 1rem;
+  border: 1px solid var(--card-border-color);
+  transition: all 0.3s ease;
+  margin-bottom: 1rem; /* Add spacing between component instances */
 }
 
-.keybinding-settings h3 {
-  margin-bottom: 0.5rem;
-  font-size: 1rem;
+.keybinding-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
   color: var(--text-color);
+  margin: 0 0 1rem 0;
+}
+
+.keybinding-body {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .key-list {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  align-items: center;
+  flex-grow: 1;
 }
 
 .key-item {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  background-color: var(--card-bg-color);
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  padding: 0.25rem 0.5rem;
+  background-color: var(--background-color);
+  border: 1px solid var(--card-border-color);
+  border-radius: 16px;
+  padding: 4px 8px 4px 12px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-color);
+  transition: all 0.2s ease-in-out;
 }
 
-.key-item span {
+.key-text {
   margin-right: 0.5rem;
 }
 
-.remove-key-btn,
-.add-key-btn {
-  background-color: var(--primary-color);
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  display: flex;
+.key-action-btn {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
+  background: none;
+  border: none;
+  padding: 4px;
+  border-radius: 50%;
   cursor: pointer;
-  font-size: 1rem;
-  line-height: 1;
+  color: var(--hover-color); /* Using hover-color as secondary text color */
+  transition: all 0.2s ease-in-out;
 }
 
-.remove-key-btn {
-  background-color: var(--danger-color);
+.key-action-btn:hover {
+  background-color: var(--hover-color);
+  color: var(--text-color);
+}
+
+.remove-key-btn:hover {
+  color: var(--btn-danger-bg);
 }
 
 .add-key-btn {
-  background-color: var(--primary-color);
+  background-color: var(--hover-color);
+  color: var(--accent-color);
+  width: 32px;
+  height: 32px;
+}
+
+.add-key-btn:hover {
+  background-color: var(--accent-color);
+  color: var(--panel-bg); /* Use panel background for text on accent hover */
+}
+
+.key-action-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Light Theme Overrides */
+.light-theme .keybinding-settings {
+  background-color: #ffffff;
+  border-color: #e2e8f0;
+}
+
+.light-theme .key-item {
+  background-color: #f7fafc;
+  border-color: #e2e8f0;
+  color: #2d3748;
+}
+
+.light-theme .key-action-btn {
+  color: #a0aec0; /* Medium gray for better contrast */
+}
+
+.light-theme .key-action-btn:hover {
+  background-color: #edf2f7;
+  color: #2d3748;
+}
+
+.light-theme .remove-key-btn:hover {
+  color: var(--btn-danger-bg);
+  background-color: #fed7d7;
+}
+
+.light-theme .add-key-btn {
+  background-color: #ebf8ff;
+  color: #3182ce;
+}
+
+.light-theme .add-key-btn:hover {
+  background-color: #3182ce;
+  color: #ffffff;
 }

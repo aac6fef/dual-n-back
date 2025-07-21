@@ -33,7 +33,8 @@
       "title": "Keybindings",
       "position": "Position (Visual)",
       "audio": "Audio (Sound)",
-      "listening": "Press any key..."
+      "listening": "Press any key...",
+      "addTitle": "Add New Key"
     },
     "saveButton": "Save Settings",
     "saveSuccess": "Saved!",

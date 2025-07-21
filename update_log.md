@@ -2,6 +2,13 @@
 
 [**中文更新日志 (Chinese Update Log)**](update_log_cn.md)
 
+## v0.1.11
+- **[UI/UX]** Completely redesigned the keybinding settings interface for a more modern and intuitive user experience.
+- **[UI/UX]** Replaced the full-screen key listener with a clear, user-friendly modal dialog for adding new keys.
+- **[Fix]** Resolved an issue where UI elements were not clearly visible in light mode.
+- **[Fix]** Prevented the "Escape" key from being accidentally registered as a keybinding when closing the modal.
+- **[UI/UX]** Added icons to the "Position" and "Audio" keybinding sections for better clarity.
+
 ## v0.1.10
 - **[Fix]** Addressed a series of rendering issues in the history charts:
   - Resolved chart crowding and the disappearance of N-level labels by ensuring even data point distribution.

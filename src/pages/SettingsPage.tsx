@@ -7,8 +7,9 @@ import { useSettings } from '../contexts/SettingsContext';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Switch from '../components/ui/Switch';
-import SettingItem from '../components/SettingItem'; // Import the new component
+import SettingItem from '../components/SettingItem';
 import KeybindingSettings from '../components/KeybindingSettings';
+import Modal from '../components/ui/Modal'; // Import the new Modal component
 import {
   Sliders,
   Monitor,
@@ -25,6 +26,8 @@ import {
   Moon,
   Beaker,
   ZapOff,
+  Grid,
+  Volume2,
 } from 'lucide-react';
 import './SettingsPage.css';
 
@@ -73,6 +76,11 @@ const SettingsPage: React.FC = () => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isListening) return;
+
+      // Prevent Escape key from being bound
+      if (e.key === 'Escape') {
+        return;
+      }
 
       e.preventDefault();
       e.stopPropagation();
@@ -200,11 +208,14 @@ const SettingsPage: React.FC = () => {
 
   return (
     <div className="settings-container">
-      {isListening && (
-        <div className="key-listener-overlay" onClick={() => setIsListening(null)}>
-          <div className="key-listener-box">{t('settings.keybindings.listening')}</div>
-        </div>
-      )}
+      <Modal
+        isOpen={!!isListening}
+        onClose={() => setIsListening(null)}
+        title={t('settings.keybindings.addTitle')}
+      >
+        <p>{t('settings.keybindings.listening')}</p>
+      </Modal>
+
       <h1 className="page-title">{t('settings.title')}</h1>
       <div>
         <Card className="settings-card">
@@ -316,12 +327,14 @@ const SettingsPage: React.FC = () => {
             {t('settings.keybindings.title')}
           </h2>
           <KeybindingSettings
+            icon={<Grid size={18} />}
             title={t('settings.keybindings.position')}
             keys={positionKeys}
             onAdd={() => handleAddKey('position')}
             onRemove={(index) => handleRemoveKey('position', index)}
           />
           <KeybindingSettings
+            icon={<Volume2 size={18} />}
             title={t('settings.keybindings.audio')}
             keys={audioKeys}
             onAdd={() => handleAddKey('audio')}
