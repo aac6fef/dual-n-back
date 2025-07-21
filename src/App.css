@@ -5,6 +5,7 @@
   --background-color: #1a1b26;
   --sidebar-color: #24283b;
   --text-color: #c0caf5;
+  --text-color-secondary: #a9b1d6;
   --hover-color: #414868;
   --accent-color: #7aa2f7;
   --card-border-color: var(--hover-color);
@@ -32,6 +33,7 @@
   --background-color: #f2f2f2;
   --sidebar-color: #ffffff;
   --text-color: #2d3748;
+  --text-color-secondary: #718096;
   --hover-color: #e2e8f0;
   --accent-color: #4299e1;
   --card-border-color: #e2e8f0;

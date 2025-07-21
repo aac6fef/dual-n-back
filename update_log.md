@@ -2,7 +2,13 @@
 
 [**中文更新日志 (Chinese Update Log)**](update_log_cn.md)
 
+
+
 ## v0.1.11
+- **[UI/UX]** Completely redesigned the session cards on the history page to be fully responsive, ensuring proper display on all screen sizes from mobile to desktop.
+- **[UI/UX]** Implemented a multi-stage responsive layout for session cards (2x2 grid for tablets, vertical stack for mobile) to optimize information density and readability.
+- **[UI/UX]** Added `Eye` and `Ear` icons to the visual and audio score sections for better clarity.
+- **[Fix]** Corrected an issue where text and icons in the session cards were not clearly visible in light mode.
 - **[UI/UX]** Completely redesigned the keybinding settings interface for a more modern and intuitive user experience.
 - **[UI/UX]** Replaced the full-screen key listener with a clear, user-friendly modal dialog for adding new keys.
 - **[Fix]** Resolved an issue where UI elements were not clearly visible in light mode.

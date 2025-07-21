@@ -22,6 +22,8 @@ import {
   AlertTriangle,
   Calendar,
   BrainCircuit,
+  Eye,
+  Ear,
 } from 'lucide-react';
 import Card from '../components/ui/Card';
 import { GameSessionSummary, transformHistoryData } from '../utils/stats';
@@ -282,32 +284,46 @@ const HistoryPage: React.FC = () => {
         {chartData.slice().reverse().map((session) => (
           <Link to={`/history/${session.id}`} key={session.id} className="session-link">
             <Card className="session-card">
-              <div className="session-summary">
-                <div className="summary-item">
-                  <Calendar size={18} />
-                  <span>{session.date}</span>
-                </div>
-                <div className="summary-item">
-                  <BrainCircuit size={18} />
-                  <span>{t('history.nLevel')}: {session.nLevel}</span>
-                </div>
+              {/* Item 1: Date */}
+              <div className="session-cell session-date">
+                <Calendar size={18} />
+                <span>{session.date}</span>
               </div>
-              <div className="session-scores">
+
+              {/* Item 2: N-Level */}
+              <div className="session-cell session-nlevel">
+                <BrainCircuit size={18} />
+                <span>{t('history.nLevel')}: {session.nLevel}</span>
+              </div>
+
+              {/* Item 3: Visual Scores */}
+              <div className="session-cell session-visuals">
                 <div className="score-group">
-                  <span className="score-label">{t('history.visual')}</span>
+                  <div className="score-header">
+                    <Eye size={18} />
+                    <span className="score-label">{t('history.visual')}</span>
+                  </div>
                   <div className="score-values">
                     <span className="score-value"><Target size={14} /> {session.visualHitRate.toFixed(1)}%</span>
                     <span className="score-value"><AlertTriangle size={14} /> {session.visualFalseAlarmRate.toFixed(1)}%</span>
                   </div>
                 </div>
+              </div>
+
+              {/* Item 4: Audio Scores */}
+              <div className="session-cell session-audio">
                 <div className="score-group">
-                  <span className="score-label">{t('history.audio')}</span>
+                  <div className="score-header">
+                    <Ear size={18} />
+                    <span className="score-label">{t('history.audio')}</span>
+                  </div>
                   <div className="score-values">
                     <span className="score-value"><Target size={14} /> {session.audioHitRate.toFixed(1)}%</span>
                     <span className="score-value"><AlertTriangle size={14} /> {session.audioFalseAlarmRate.toFixed(1)}%</span>
                   </div>
                 </div>
               </div>
+
               <ChevronRight className="session-arrow" size={24} />
             </Card>
           </Link>

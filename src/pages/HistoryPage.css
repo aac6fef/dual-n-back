@@ -119,55 +119,54 @@
   display: block;
 }
 
+/* --- Default Desktop Layout (> 992px) --- */
 .session-card {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr auto;
+  grid-template-areas: "date nlevel visual audio arrow";
   align-items: center;
-  padding: 1.5rem;
+  padding: 1rem 1.5rem;
   transition: background-color 0.2s ease, transform 0.2s ease;
-  border: 1px solid transparent;
   border-bottom: 1px solid var(--hover-color);
   gap: 1rem;
 }
 
 .session-link:hover .session-card {
   background-color: var(--hover-color);
-  border-color: var(--accent-color);
+  border-radius: 8px;
   transform: translateY(-2px);
 }
 
-.session-summary {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-  flex-shrink: 0;
-}
-
-.summary-item {
+.session-cell {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 500;
 }
 
-.session-scores {
-  display: flex;
-  gap: 2rem;
-  flex-grow: 1;
-  justify-content: center;
-}
+.session-date { grid-area: date; }
+.session-nlevel { grid-area: nlevel; }
+.session-visuals { grid-area: visual; justify-content: center; }
+.session-audio { grid-area: audio; justify-content: center; }
+.session-arrow { grid-area: arrow; }
 
 .score-group {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  gap: 0.5rem; /* Increased gap slightly */
+}
+
+.score-header {
+  display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
 .score-label {
   font-weight: 500;
-  font-size: 1rem;
+  font-size: 0.9rem;
   color: var(--text-color);
 }
 
@@ -181,42 +180,59 @@
   align-items: center;
   gap: 0.3rem;
   font-size: 0.9rem;
-  color: #a9b1d6;
+  color: var(--text-color-secondary); /* Use theme-aware color */
 }
 
 .session-arrow {
-  color: #a9b1d6;
+  grid-area: arrow;
+  color: var(--text-color-secondary);
   transition: transform 0.2s ease;
+  justify-self: end;
 }
 
 .session-link:hover .session-arrow {
   transform: translateX(5px);
 }
 
+/* --- Tablet Layout (768px - 992px) --- */
+@media (max-width: 992px) {
+  .session-card {
+    grid-template-columns: 1fr 1fr auto;
+    grid-template-areas:
+      "date visual arrow"
+      "nlevel audio arrow";
+    padding: 1.5rem;
+    row-gap: 1rem;
+  }
+
+  .session-cell {
+    justify-content: center; /* Center all content in their cells */
+  }
+}
+
+/* --- Mobile Layout (< 768px) --- */
 @media (max-width: 768px) {
   .session-card {
-    flex-direction: column;
-    align-items: center;
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "date"
+      "nlevel"
+      "visual"
+      "audio";
     gap: 1rem;
     padding: 1rem;
   }
-  .session-summary {
-    width: 100%;
-    justify-content: space-around;
+
+  .session-cell {
+    justify-content: center; /* Center content on mobile */
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--hover-color);
   }
-  .session-scores {
-    flex-direction: column;
-    gap: 0.75rem;
-    align-items: center;
+
+  .session-card .session-cell:last-of-type {
+    border-bottom: none;
   }
-  .score-group {
-    width: 100%;
-    align-items: center;
-  }
-  .score-values {
-    justify-content: center;
-    width: 100%;
-  }
+
   .session-arrow {
     display: none;
   }
