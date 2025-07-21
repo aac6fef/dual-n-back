@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Pause, Play, X } from 'lucide-react';
 import { invoke } from '@tauri-apps/api/core';
+import { confirm } from '@tauri-apps/plugin-dialog';
 import { useSettings } from '../contexts/SettingsContext';
 import { useGameStatus } from '../contexts/GameStatusContext';
 import { usePause } from '../contexts/PauseContext';
@@ -14,7 +15,7 @@ import GameControls, { FeedbackState } from '../components/GameControls';
 import GameHeader from '../components/GameHeader';
 import Card from '../components/ui/Card';
 import Stat from '../components/ui/Stat';
-import { GameSessionSummary } from '../utils/stats'; // Import for type safety
+import { GameSessionSummary, calculateAccuracy } from '../utils/stats'; // Import for type safety
 import './GamePage.css';
 
 // --- Data Structures mirroring Rust backend ---
@@ -35,9 +36,9 @@ interface GameState {
   settings: UserSettings;
   currentTurnIndex: number;
   currentStimulus: FrontendStimulus | null;
-  visualHitRate: number;
+  visualAccuracy: number;
   visualFalseAlarmRate: number;
-  audioHitRate: number;
+  audioAccuracy: number;
   audioFalseAlarmRate: number;
   isVisualMatch: boolean;
   isAudioMatch: boolean;
@@ -53,7 +54,7 @@ const GamePage: React.FC = () => {
   const navigate = useNavigate();
   const { setIsGameRunning } = useGameStatus();
   const { setPauseListener } = usePause();
-  const { settings: contextSettings, isLoading: settingsLoading } = useSettings();
+  const { settings: contextSettings, setSettings, isLoading: settingsLoading } = useSettings();
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -194,6 +195,34 @@ const GamePage: React.FC = () => {
               const history = await invoke<GameSessionSummary[]>('get_game_history');
               if (history.length > 0) {
                 const latestSession = [...history].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
+                
+                // Check for auto-adjustment
+                if (contextSettings.autoAdjustNLevel) {
+                  const visualAccuracy = calculateAccuracy(latestSession.visual_stats);
+                  const audioAccuracy = calculateAccuracy(latestSession.audio_stats);
+                  const overallAccuracy = (visualAccuracy + audioAccuracy) / 2;
+
+                  if (overallAccuracy > contextSettings.highAccuracyThreshold) {
+                    const confirmed = await confirm(t('game.increaseDifficultyPrompt') + '\n\n' + t('game.disableSuggestionInSettings'), {
+                      title: t('game.difficultySuggestionTitle'),
+                      okLabel: t('game.increase'),
+                      cancelLabel: t('game.cancel'),
+                    });
+                    if (confirmed) {
+                      setSettings(prev => ({ ...prev, n_level: Math.min(9, prev.n_level + 1) }));
+                    }
+                  } else if (overallAccuracy < contextSettings.lowAccuracyThreshold) {
+                    const confirmed = await confirm(t('game.decreaseDifficultyPrompt') + '\n\n' + t('game.disableSuggestionInSettings'), {
+                      title: t('game.difficultySuggestionTitle'),
+                      okLabel: t('game.decrease'),
+                      cancelLabel: t('game.cancel'),
+                    });
+                    if (confirmed) {
+                      setSettings(prev => ({ ...prev, n_level: Math.max(1, prev.n_level - 1) }));
+                    }
+                  }
+                }
+
                 navigate(`/results/${latestSession.id}`, { state: { fromGame: true } });
               } else {
                 navigate('/'); // Fallback if history is empty
@@ -299,8 +328,8 @@ const GamePage: React.FC = () => {
           nLevel={gameState.settings.n_level}
           turn={gameState.currentTurnIndex}
           totalTurns={gameState.settings.session_length}
-          visualHitRate={gameState.visualHitRate * 100}
-          audioHitRate={gameState.audioHitRate * 100}
+          visualAccuracy={gameState.visualAccuracy}
+          audioAccuracy={gameState.audioAccuracy}
         />
         <div className="game-actions">
           <Button onClick={handlePauseToggle} variant="secondary" className="action-btn">

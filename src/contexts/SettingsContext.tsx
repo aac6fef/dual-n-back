@@ -18,6 +18,9 @@ export interface AppSettings extends UserSettings {
   reduceMotion: boolean;
   positionKeys: string[];
   audioKeys: string[];
+  autoAdjustNLevel: boolean;
+  highAccuracyThreshold: number;
+  lowAccuracyThreshold: number;
 }
 
 // Default settings to be used on first load or if loading fails
@@ -31,6 +34,9 @@ const defaultSettings: AppSettings = {
   reduceMotion: false,
   positionKeys: ['p', 'h', '[', 'ArrowRight'],
   audioKeys: ['a', 'l', ']', 'ArrowLeft'],
+  autoAdjustNLevel: true,
+  highAccuracyThreshold: 90,
+  lowAccuracyThreshold: 50,
 };
 
 // Type for the context value
@@ -61,6 +67,9 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [reduceMotion, setReduceMotion] = useLocalStorage('settings:reduceMotion', defaultSettings.reduceMotion);
   const [positionKeys, setPositionKeys] = useLocalStorage('settings:positionKeys', defaultSettings.positionKeys);
   const [audioKeys, setAudioKeys] = useLocalStorage('settings:audioKeys', defaultSettings.audioKeys);
+  const [autoAdjustNLevel, setAutoAdjustNLevel] = useLocalStorage('settings:autoAdjustNLevel', defaultSettings.autoAdjustNLevel);
+  const [highAccuracyThreshold, setHighAccuracyThreshold] = useLocalStorage('settings:highAccuracyThreshold', defaultSettings.highAccuracyThreshold);
+  const [lowAccuracyThreshold, setLowAccuracyThreshold] = useLocalStorage('settings:lowAccuracyThreshold', defaultSettings.lowAccuracyThreshold);
 
   const loadSettings = async () => {
     setIsLoading(true);
@@ -74,6 +83,9 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
         reduceMotion,
         positionKeys,
         audioKeys,
+        autoAdjustNLevel,
+        highAccuracyThreshold,
+        lowAccuracyThreshold,
       };
       setSettings(fullSettings);
       setInitialState(fullSettings);
@@ -87,6 +99,9 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
         reduceMotion,
         positionKeys,
         audioKeys,
+        autoAdjustNLevel,
+        highAccuracyThreshold,
+        lowAccuracyThreshold,
       };
       setSettings(fullSettings);
       setInitialState(fullSettings);
@@ -102,8 +117,8 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   // Sync local storage values with the main settings state
   useEffect(() => {
-    setSettings(prev => ({ ...prev, theme, language, allowFastSpeed, reduceMotion, positionKeys, audioKeys }));
-  }, [theme, language, allowFastSpeed, reduceMotion, positionKeys, audioKeys]);
+    setSettings(prev => ({ ...prev, theme, language, allowFastSpeed, reduceMotion, positionKeys, audioKeys, autoAdjustNLevel, highAccuracyThreshold, lowAccuracyThreshold }));
+  }, [theme, language, allowFastSpeed, reduceMotion, positionKeys, audioKeys, autoAdjustNLevel, highAccuracyThreshold, lowAccuracyThreshold]);
 
   // Effect to apply theme and language changes globally
   useEffect(() => {
@@ -143,6 +158,9 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
     setReduceMotion(settings.reduceMotion);
     setPositionKeys(settings.positionKeys);
     setAudioKeys(settings.audioKeys);
+    setAutoAdjustNLevel(settings.autoAdjustNLevel);
+    setHighAccuracyThreshold(settings.highAccuracyThreshold);
+    setLowAccuracyThreshold(settings.lowAccuracyThreshold);
 
     // Update initial state to reflect the saved state
     setInitialState(settings);
@@ -158,6 +176,9 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
     setReduceMotion(defaultSettings.reduceMotion);
     setPositionKeys(defaultSettings.positionKeys);
     setAudioKeys(defaultSettings.audioKeys);
+    setAutoAdjustNLevel(defaultSettings.autoAdjustNLevel);
+    setHighAccuracyThreshold(defaultSettings.highAccuracyThreshold);
+    setLowAccuracyThreshold(defaultSettings.lowAccuracyThreshold);
 
     // Directly set the state to default settings
     setSettings(defaultSettings);

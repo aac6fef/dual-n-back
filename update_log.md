@@ -2,9 +2,12 @@
 
 [**中文更新日志 (Chinese Update Log)**](update_log_cn.md)
 
-
-
 ## v0.1.11
+- **[Feature]** Added an intelligent difficulty adjustment feature. The system will now prompt the user to increase or decrease the N-Back level based on their performance.
+- **[Feature]** The intelligent difficulty adjustment feature can be enabled or disabled in the settings. The accuracy thresholds for triggering the suggestions are also configurable.
+- **[Feature]** The difficulty adjustment prompt is now a confirmation dialog, allowing the user to accept or decline the suggestion.
+- **[Refactor]** Changed the accuracy calculation metric from "Hit Rate" to a more comprehensive "Accuracy" score, which includes correct rejections. This new metric is now used across the app, including the game UI, history page, and difficulty adjustment logic.
+- **[Fix]** Fixed a bug where the accuracy displayed on the game page was incorrect.
 - **[UI/UX]** Completely redesigned the session cards on the history page to be fully responsive, ensuring proper display on all screen sizes from mobile to desktop.
 - **[UI/UX]** Implemented a multi-stage responsive layout for session cards (2x2 grid for tablets, vertical stack for mobile) to optimize information density and readability.
 - **[UI/UX]** Added `Eye` and `Ear` icons to the visual and audio score sections for better clarity.
@@ -85,7 +88,6 @@
 ## Roadmap
 
 ### Feature Enhancements
-- **Intelligent Difficulty Suggestions**: Proactively prompt users to increase the N-Back level when their accuracy consistently exceeds 80%.
 - **System Integration**: Automatically sync with the operating system's language and theme (dark/light) settings.
 - **Exit Functionality**: Add a convenient back/exit function to the history detail page.
 

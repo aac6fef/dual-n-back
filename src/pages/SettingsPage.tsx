@@ -28,6 +28,7 @@ import {
   ZapOff,
   Grid,
   Volume2,
+  Bot,
 } from 'lucide-react';
 import './SettingsPage.css';
 
@@ -49,7 +50,7 @@ const SettingsPage: React.FC = () => {
   const [isListening, setIsListening] = useState<string | null>(null);
   const isInitialMount = useRef(true);
 
-  const { n_level, speed_ms, session_length, theme, language, allowFastSpeed, reduceMotion, positionKeys, audioKeys } = settings;
+  const { n_level, speed_ms, session_length, theme, language, allowFastSpeed, reduceMotion, positionKeys, audioKeys, autoAdjustNLevel, highAccuracyThreshold, lowAccuracyThreshold } = settings;
 
   const minSpeed = allowFastSpeed ? MIN_SPEED_FAST : MIN_SPEED_NORMAL;
   const minSessionLength = Math.max(MIN_SESSION_BASE, SESSION_LENGTH_FACTOR * n_level);
@@ -272,6 +273,55 @@ const SettingsPage: React.FC = () => {
                 </div>
               )}
             </>
+          </SettingItem>
+        </Card>
+
+        <Card className="settings-card">
+          <h2 className="card-title">
+            <Bot size={20} />
+            {t('settings.intelligentAdjustment.title')}
+          </h2>
+          <SettingItem
+            isRow
+            icon={<Bot size={18} />}
+            label={t('settings.intelligentAdjustment.autoAdjustNLevel')}
+          >
+            <Switch
+              id="auto-adjust-n-level-switcher"
+              label=""
+              checked={autoAdjustNLevel}
+              onChange={(e) => handleSettingChange('autoAdjustNLevel', e.target.checked)}
+            />
+          </SettingItem>
+          <SettingItem
+            icon={<BrainCircuit size={18} />}
+            label={t('settings.intelligentAdjustment.highAccuracyThreshold', { value: highAccuracyThreshold })}
+          >
+            <input
+              type="range"
+              id="high-accuracy-threshold"
+              min={50}
+              max={100}
+              value={highAccuracyThreshold}
+              onChange={(e) => handleSettingChange('highAccuracyThreshold', Number(e.target.value))}
+              className="slider"
+              disabled={!autoAdjustNLevel}
+            />
+          </SettingItem>
+          <SettingItem
+            icon={<BrainCircuit size={18} />}
+            label={t('settings.intelligentAdjustment.lowAccuracyThreshold', { value: lowAccuracyThreshold })}
+          >
+            <input
+              type="range"
+              id="low-accuracy-threshold"
+              min={0}
+              max={50}
+              value={lowAccuracyThreshold}
+              onChange={(e) => handleSettingChange('lowAccuracyThreshold', Number(e.target.value))}
+              className="slider"
+              disabled={!autoAdjustNLevel}
+            />
           </SettingItem>
         </Card>
 

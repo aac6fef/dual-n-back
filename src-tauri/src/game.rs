@@ -49,6 +49,18 @@ impl AccuracyStats {
     /// Calculates the Hit Rate (Sensitivity).
     /// Formula: True Positives / (True Positives + False Negatives)
     /// Returns a value between 0.0 and 1.0.
+    pub fn calculate_accuracy(&self) -> f32 {
+        if self.true_positives == 0 {
+            return 0.0;
+        }
+        let total_trials = self.true_positives + self.true_negatives + self.false_positives + self.false_negatives;
+        if total_trials == 0 {
+            0.0
+        } else {
+            (self.true_positives + self.true_negatives) as f32 / total_trials as f32
+        }
+    }
+
     pub fn calculate_hit_rate(&self) -> f32 {
         let total_matches = self.true_positives + self.false_negatives;
         if total_matches == 0 {

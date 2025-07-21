@@ -6,16 +6,16 @@ interface GameHeaderProps {
   nLevel: number;
   turn: number;
   totalTurns: number;
-  visualHitRate: number;
-  audioHitRate: number;
+  visualAccuracy: number;
+  audioAccuracy: number;
 }
 
 const GameHeader: React.FC<GameHeaderProps> = ({
   nLevel,
   turn,
   totalTurns,
-  visualHitRate,
-  audioHitRate,
+  visualAccuracy,
+  audioAccuracy,
 }) => {
   return (
     <div className="game-header-container">
@@ -25,11 +25,11 @@ const GameHeader: React.FC<GameHeaderProps> = ({
       </div>
       <div className="header-item">
         <Target size={20} />
-        <span>{visualHitRate.toFixed(0)}%</span>
+        <span>{visualAccuracy.toFixed(0)}%</span>
       </div>
       <div className="header-item">
         <Ear size={20} />
-        <span>{audioHitRate.toFixed(0)}%</span>
+        <span>{audioAccuracy.toFixed(0)}%</span>
       </div>
       <div className="header-item">
         <Repeat size={20} />

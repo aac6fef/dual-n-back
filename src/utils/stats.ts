@@ -50,6 +50,13 @@ const calculateRate = (numerator: number, denominator: number): number => {
   return (numerator / denominator) * 100;
 };
 
+export const calculateAccuracy = (stats: AccuracyStats): number => {
+  if (stats.true_positives === 0) return 0.0;
+  const totalTrials = stats.true_positives + stats.false_negatives + stats.true_negatives + stats.false_positives;
+  if (totalTrials === 0) return 100.0;
+  return ((stats.true_positives + stats.true_negatives) / totalTrials) * 100;
+};
+
 export const getCalculatedStats = (stats: AccuracyStats) => {
   const totalMatches = stats.true_positives + stats.false_negatives;
   const totalNonMatches = stats.true_negatives + stats.false_positives;
@@ -82,8 +89,8 @@ export const transformHistoryData = (sessions: GameSessionSummary[]) => {
     nLevel: session.settings.n_level,
     speed: session.settings.speed_ms,
     sessionLength: session.settings.session_length,
-    visualHitRate: calculateHitRate(session.visual_stats),
-    audioHitRate: calculateHitRate(session.audio_stats),
+    visualAccuracy: calculateAccuracy(session.visual_stats),
+    audioAccuracy: calculateAccuracy(session.audio_stats),
     visualFalseAlarmRate: calculateFalseAlarmRate(session.visual_stats),
     audioFalseAlarmRate: calculateFalseAlarmRate(session.audio_stats),
   }));

@@ -10,6 +10,12 @@
       "gridSize": "Grid Size: {{size}}x{{size}}",
       "sessionLengthError": "Session length must be at least {{minLength}} for N-Level {{nLevel}}."
     },
+    "intelligentAdjustment": {
+      "title": "Intelligent Adjustment",
+      "autoAdjustNLevel": "Automatically Adjust N-Level",
+      "highAccuracyThreshold": "High Accuracy Threshold: {{value}}%",
+      "lowAccuracyThreshold": "Low Accuracy Threshold: {{value}}%"
+    },
     "interface": {
       "title": "Interface",
       "visualFeedback": "Visual Feedback",
@@ -59,17 +65,17 @@
     "title": "History & Progress",
     "loading": "Loading History...",
     "noHistory": "No history yet. Play a game to see your progress!",
-    "hitRateChart": "Hit Rate Trend",
+    "accuracyChart": "Accuracy Trend",
     "falseAlarmChart": "False Alarm Trend",
     "difficultyProgression": "Difficulty Progression",
     "sessionHistory": "Session History",
-    "visualHitRate": "Visual Hit Rate",
-    "audioHitRate": "Audio Hit Rate",
+    "visualAccuracy": "Visual Accuracy",
+    "audioAccuracy": "Audio Accuracy",
     "visualFaRate": "Visual FA Rate",
     "audioFaRate": "Audio FA Rate",
     "visual": "Visual",
     "audio": "Audio",
-    "hitRate": "Hit",
+    "accuracy": "Accuracy",
     "faRate": "FA",
     "nLevel": "N-Level",
     "sessionLength": "Session Length",
@@ -115,6 +121,12 @@
     "summaryVisual": "Visual: Hit Rate {{hitRate}}%, False Alarm {{faRate}}%",
     "summaryAudio": "Audio: Hit Rate {{hitRate}}%, False Alarm {{faRate}}%",
     "position": "Position",
-    "audio": "Audio"
+    "audio": "Audio",
+    "difficultySuggestionTitle": "Difficulty Suggestion",
+    "increaseDifficultyPrompt": "Great job! It's time to challenge yourself with a higher N-Back level.",
+    "decreaseDifficultyPrompt": "Keep practicing! We suggest trying a lower N-Back level to solidify your skills.",
+    "disableSuggestionInSettings": "You can disable this prompt in the settings.",
+    "increase": "Increase",
+    "decrease": "Decrease"
   }
 }

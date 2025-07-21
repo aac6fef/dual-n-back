@@ -143,11 +143,11 @@ const HistoryPage: React.FC = () => {
           <div className="chart-header">
             <h2 className="page-subtitle">
               <Target size={22} />
-              {t('history.hitRateChart')}
+              {t('history.accuracyChart')}
             </h2>
             <div className="custom-legend">
-              <div className="legend-item"><span className="legend-color-box" style={{ backgroundColor: themeColors.line1 }}></span>{t('history.visualHitRate')}</div>
-              <div className="legend-item"><span className="legend-color-box" style={{ backgroundColor: themeColors.line2 }}></span>{t('history.audioHitRate')}</div>
+              <div className="legend-item"><span className="legend-color-box" style={{ backgroundColor: themeColors.line1 }}></span>{t('history.visualAccuracy')}</div>
+              <div className="legend-item"><span className="legend-color-box" style={{ backgroundColor: themeColors.line2 }}></span>{t('history.audioAccuracy')}</div>
             </div>
           </div>
           <div className="chart-container">
@@ -178,8 +178,8 @@ const HistoryPage: React.FC = () => {
                     <Label value={`N=${p.nLevel}`} position="top" fill={themeColors.accentColor} fontSize={12} />
                   </ReferenceLine>
                 ))}
-                <Line type="monotone" dataKey="visualHitRate" name={t('history.visualHitRate')} stroke={themeColors.line1} strokeWidth={2} activeDot={{ r: 6 }} dot={{ r: 3 }} legendType="none" />
-                <Line type="monotone" dataKey="audioHitRate" name={t('history.audioHitRate')} stroke={themeColors.line2} strokeWidth={2} activeDot={{ r: 6 }} dot={{ r: 3 }} legendType="none" />
+                <Line type="monotone" dataKey="visualAccuracy" name={t('history.visualAccuracy')} stroke={themeColors.line1} strokeWidth={2} activeDot={{ r: 6 }} dot={{ r: 3 }} legendType="none" />
+                <Line type="monotone" dataKey="audioAccuracy" name={t('history.audioAccuracy')} stroke={themeColors.line2} strokeWidth={2} activeDot={{ r: 6 }} dot={{ r: 3 }} legendType="none" />
               </LineChart>
             </Card>
           </div>
@@ -304,7 +304,7 @@ const HistoryPage: React.FC = () => {
                     <span className="score-label">{t('history.visual')}</span>
                   </div>
                   <div className="score-values">
-                    <span className="score-value"><Target size={14} /> {session.visualHitRate.toFixed(1)}%</span>
+                    <span className="score-value"><Target size={14} /> {session.visualAccuracy.toFixed(1)}%</span>
                     <span className="score-value"><AlertTriangle size={14} /> {session.visualFalseAlarmRate.toFixed(1)}%</span>
                   </div>
                 </div>
@@ -318,7 +318,7 @@ const HistoryPage: React.FC = () => {
                     <span className="score-label">{t('history.audio')}</span>
                   </div>
                   <div className="score-values">
-                    <span className="score-value"><Target size={14} /> {session.audioHitRate.toFixed(1)}%</span>
+                    <span className="score-value"><Target size={14} /> {session.audioAccuracy.toFixed(1)}%</span>
                     <span className="score-value"><AlertTriangle size={14} /> {session.audioFalseAlarmRate.toFixed(1)}%</span>
                   </div>
                 </div>

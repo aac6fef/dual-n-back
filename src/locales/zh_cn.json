@@ -10,6 +10,12 @@
       "sessionLength": "会话长度: {{length}}",
       "sessionLengthError": "对于 N-Level {{nLevel}}，会话长度必须至少为 {{minLength}}。"
     },
+    "intelligentAdjustment": {
+      "title": "智能调整",
+      "autoAdjustNLevel": "自动调整 N-Level",
+      "highAccuracyThreshold": "高正确率阈值: {{value}}%",
+      "lowAccuracyThreshold": "低正确率阈值: {{value}}%"
+    },
     "interface": {
       "title": "界面",
       "visualFeedback": "视觉反馈",
@@ -59,17 +65,17 @@
     "title": "历史与进度",
     "loading": "正在加载历史记录...",
     "noHistory": "暂无历史记录。开始一局游戏来查看你的进度！",
-    "hitRateChart": "命中率趋势",
+    "accuracyChart": "正确率趋势",
     "falseAlarmChart": "虚警率趋势",
     "difficultyProgression": "难度进程",
     "sessionHistory": "会话历史",
-    "visualHitRate": "视觉命中率",
-    "audioHitRate": "听觉命中率",
+    "visualAccuracy": "视觉正确率",
+    "audioAccuracy": "听觉正确率",
     "visualFaRate": "视觉虚警率",
     "audioFaRate": "听觉虚警率",
     "visual": "视觉",
     "audio": "听觉",
-    "hitRate": "命中",
+    "accuracy": "正确率",
     "faRate": "虚警",
     "nLevel": "N-Level",
     "sessionLength": "会话长度",
@@ -115,6 +121,12 @@
     "summaryVisual": "视觉: 命中率 {{hitRate}}%, 虚警率 {{faRate}}%",
     "summaryAudio": "听觉: 命中率 {{hitRate}}%, 虚警率 {{faRate}}%",
     "position": "位置",
-    "audio": "声音"
+    "audio": "声音",
+    "difficultySuggestionTitle": "难度建议",
+    "increaseDifficultyPrompt": "你的表现很棒！是时候挑战更高难度的 N-Back 了。",
+    "decreaseDifficultyPrompt": "继续努力！建议你尝试低一级的 N-Back 来巩固练习。",
+    "disableSuggestionInSettings": "你可以在设置中关闭此提示。",
+    "increase": "提升",
+    "decrease": "降低"
   }
 }
