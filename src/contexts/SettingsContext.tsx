@@ -16,6 +16,8 @@ export interface AppSettings extends UserSettings {
   language: string;
   allowFastSpeed: boolean;
   reduceMotion: boolean;
+  positionKeys: string[];
+  audioKeys: string[];
 }
 
 // Default settings to be used on first load or if loading fails
@@ -27,6 +29,8 @@ const defaultSettings: AppSettings = {
   language: 'en',
   allowFastSpeed: false,
   reduceMotion: false,
+  positionKeys: ['p', 'h', '[', 'ArrowRight'],
+  audioKeys: ['a', 'l', ']', 'ArrowLeft'],
 };
 
 // Type for the context value
@@ -55,6 +59,8 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [language, setLanguage] = useLocalStorage('settings:language', defaultSettings.language);
   const [allowFastSpeed, setAllowFastSpeed] = useLocalStorage('settings:allowFastSpeed', defaultSettings.allowFastSpeed);
   const [reduceMotion, setReduceMotion] = useLocalStorage('settings:reduceMotion', defaultSettings.reduceMotion);
+  const [positionKeys, setPositionKeys] = useLocalStorage('settings:positionKeys', defaultSettings.positionKeys);
+  const [audioKeys, setAudioKeys] = useLocalStorage('settings:audioKeys', defaultSettings.audioKeys);
 
   const loadSettings = async () => {
     setIsLoading(true);
@@ -66,6 +72,8 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
         language,
         allowFastSpeed,
         reduceMotion,
+        positionKeys,
+        audioKeys,
       };
       setSettings(fullSettings);
       setInitialState(fullSettings);
@@ -77,6 +85,8 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
         language,
         allowFastSpeed,
         reduceMotion,
+        positionKeys,
+        audioKeys,
       };
       setSettings(fullSettings);
       setInitialState(fullSettings);
@@ -92,8 +102,8 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   // Sync local storage values with the main settings state
   useEffect(() => {
-    setSettings(prev => ({ ...prev, theme, language, allowFastSpeed, reduceMotion }));
-  }, [theme, language, allowFastSpeed, reduceMotion]);
+    setSettings(prev => ({ ...prev, theme, language, allowFastSpeed, reduceMotion, positionKeys, audioKeys }));
+  }, [theme, language, allowFastSpeed, reduceMotion, positionKeys, audioKeys]);
 
   // Effect to apply theme and language changes globally
   useEffect(() => {
@@ -131,6 +141,8 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
     setLanguage(settings.language);
     setAllowFastSpeed(settings.allowFastSpeed);
     setReduceMotion(settings.reduceMotion);
+    setPositionKeys(settings.positionKeys);
+    setAudioKeys(settings.audioKeys);
 
     // Update initial state to reflect the saved state
     setInitialState(settings);
@@ -144,6 +156,8 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
     setLanguage(defaultSettings.language);
     setAllowFastSpeed(defaultSettings.allowFastSpeed);
     setReduceMotion(defaultSettings.reduceMotion);
+    setPositionKeys(defaultSettings.positionKeys);
+    setAudioKeys(defaultSettings.audioKeys);
 
     // Directly set the state to default settings
     setSettings(defaultSettings);

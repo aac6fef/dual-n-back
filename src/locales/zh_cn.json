@@ -29,6 +29,12 @@
       "allowFastSpeed": "允许非常短的间隔 (<1500ms)",
       "generateHistory": "生成虚假历史记录"
     },
+    "keybindings": {
+      "title": "按键绑定",
+      "position": "位置 (视觉)",
+      "audio": "音频 (声音)",
+      "listening": "请按任意键..."
+    },
     "saveButton": "保存设置",
     "saveSuccess": "已保存！",
     "unsavedChanges": "您有未保存的更改。确定要离开吗？"

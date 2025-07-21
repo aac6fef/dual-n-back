@@ -71,6 +71,25 @@ const GamePage: React.FC = () => {
   const [audioMissed, setAudioMissed] = useState(false);
   const audioCache = useRef<Record<string, HTMLAudioElement>>({});
 
+  // --- Keyboard Listener Effect ---
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!gameState || !gameState.isRunning || isPaused) return;
+
+      if (contextSettings.positionKeys.includes(event.key)) {
+        handlePositionMatch();
+      }
+      if (contextSettings.audioKeys.includes(event.key)) {
+        handleAudioMatch();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [gameState, isPaused, contextSettings.positionKeys, contextSettings.audioKeys]);
+
   // --- Pause Listener Effect ---
   useEffect(() => {
     // Register a listener that can be called from other components

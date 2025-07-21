@@ -8,9 +8,11 @@ import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Switch from '../components/ui/Switch';
 import SettingItem from '../components/SettingItem'; // Import the new component
+import KeybindingSettings from '../components/KeybindingSettings';
 import {
   Sliders,
   Monitor,
+  Keyboard,
   Database,
   Download,
   Trash2,
@@ -41,9 +43,10 @@ const SettingsPage: React.FC = () => {
   const { t } = useTranslation();
   const { settings, setSettings, saveSettings, resetSettings, isLoading } = useSettings();
   const [isGeneratingHistory, setIsGeneratingHistory] = useState(false);
+  const [isListening, setIsListening] = useState<string | null>(null);
   const isInitialMount = useRef(true);
 
-  const { n_level, speed_ms, session_length, theme, language, allowFastSpeed, reduceMotion } = settings;
+  const { n_level, speed_ms, session_length, theme, language, allowFastSpeed, reduceMotion, positionKeys, audioKeys } = settings;
 
   const minSpeed = allowFastSpeed ? MIN_SPEED_FAST : MIN_SPEED_NORMAL;
   const minSessionLength = Math.max(MIN_SESSION_BASE, SESSION_LENGTH_FACTOR * n_level);
@@ -67,6 +70,41 @@ const SettingsPage: React.FC = () => {
     return () => clearTimeout(handler);
   }, [settings, saveSettings, isSessionLengthInvalid]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isListening) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const newKey = e.key;
+
+      setSettings(prev => {
+        const currentKeys = isListening === 'position' ? prev.positionKeys : prev.audioKeys;
+        if (currentKeys.includes(newKey)) {
+          setIsListening(null);
+          return prev;
+        }
+
+        if (isListening === 'position') {
+          return { ...prev, positionKeys: [...prev.positionKeys, newKey] };
+        } else {
+          return { ...prev, audioKeys: [...prev.audioKeys, newKey] };
+        }
+      });
+
+      setIsListening(null);
+    };
+
+    if (isListening) {
+      window.addEventListener('keydown', handleKeyDown, true);
+    }
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown, true);
+    };
+  }, [isListening, setSettings]);
+
   // Centralized handler for changing settings
   const handleSettingChange = (key: keyof typeof settings, value: any) => {
     setSettings(prev => {
@@ -88,6 +126,24 @@ const SettingsPage: React.FC = () => {
       }
       
       return newSettings;
+    });
+  };
+
+  const handleAddKey = (type: 'position' | 'audio') => {
+    setIsListening(type);
+  };
+
+  const handleRemoveKey = (type: 'position' | 'audio', index: number) => {
+    setSettings(prev => {
+      if (type === 'position') {
+        const newKeys = [...prev.positionKeys];
+        newKeys.splice(index, 1);
+        return { ...prev, positionKeys: newKeys };
+      } else {
+        const newKeys = [...prev.audioKeys];
+        newKeys.splice(index, 1);
+        return { ...prev, audioKeys: newKeys };
+      }
     });
   };
 
@@ -144,6 +200,11 @@ const SettingsPage: React.FC = () => {
 
   return (
     <div className="settings-container">
+      {isListening && (
+        <div className="key-listener-overlay" onClick={() => setIsListening(null)}>
+          <div className="key-listener-box">{t('settings.keybindings.listening')}</div>
+        </div>
+      )}
       <h1 className="page-title">{t('settings.title')}</h1>
       <div>
         <Card className="settings-card">
@@ -247,6 +308,25 @@ const SettingsPage: React.FC = () => {
               onChange={(e) => handleSettingChange('reduceMotion', e.target.checked)}
             />
           </SettingItem>
+        </Card>
+
+        <Card className="settings-card">
+          <h2 className="card-title">
+            <Keyboard size={20} />
+            {t('settings.keybindings.title')}
+          </h2>
+          <KeybindingSettings
+            title={t('settings.keybindings.position')}
+            keys={positionKeys}
+            onAdd={() => handleAddKey('position')}
+            onRemove={(index) => handleRemoveKey('position', index)}
+          />
+          <KeybindingSettings
+            title={t('settings.keybindings.audio')}
+            keys={audioKeys}
+            onAdd={() => handleAddKey('audio')}
+            onRemove={(index) => handleRemoveKey('audio', index)}
+          />
         </Card>
 
         <Card className="settings-card">

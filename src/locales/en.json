@@ -29,6 +29,12 @@
       "allowFastSpeed": "Allow very short intervals (<1500ms)",
       "generateHistory": "Generate Fake History"
     },
+    "keybindings": {
+      "title": "Keybindings",
+      "position": "Position (Visual)",
+      "audio": "Audio (Sound)",
+      "listening": "Press any key..."
+    },
     "saveButton": "Save Settings",
     "saveSuccess": "Saved!",
     "unsavedChanges": "You have unsaved changes. Are you sure you want to leave?"
