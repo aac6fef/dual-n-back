@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import { invoke } from '@tauri-apps/api/core';
+import { locale } from '@tauri-apps/plugin-os';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useTranslation } from 'react-i18next';
 
@@ -14,6 +15,7 @@ export interface UserSettings {
 export interface AppSettings extends UserSettings {
   theme: string;
   language: string;
+  followSystemLanguage: boolean;
   allowFastSpeed: boolean;
   reduceMotion: boolean;
   positionKeys: string[];
@@ -30,6 +32,7 @@ const defaultSettings: AppSettings = {
   session_length: 30,
   theme: 'dark',
   language: 'en',
+  followSystemLanguage: true,
   allowFastSpeed: false,
   reduceMotion: false,
   positionKeys: ['p', 'h', '[', 'ArrowRight'],
@@ -63,6 +66,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
   // Local storage hooks
   const [theme, setTheme] = useLocalStorage('settings:theme', defaultSettings.theme);
   const [language, setLanguage] = useLocalStorage('settings:language', defaultSettings.language);
+  const [followSystemLanguage, setFollowSystemLanguage] = useLocalStorage('settings:followSystemLanguage', defaultSettings.followSystemLanguage);
   const [allowFastSpeed, setAllowFastSpeed] = useLocalStorage('settings:allowFastSpeed', defaultSettings.allowFastSpeed);
   const [reduceMotion, setReduceMotion] = useLocalStorage('settings:reduceMotion', defaultSettings.reduceMotion);
   const [positionKeys, setPositionKeys] = useLocalStorage('settings:positionKeys', defaultSettings.positionKeys);
@@ -79,6 +83,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
         ...loaded,
         theme,
         language,
+        followSystemLanguage,
         allowFastSpeed,
         reduceMotion,
         positionKeys,
@@ -95,6 +100,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
         ...defaultSettings,
         theme,
         language,
+        followSystemLanguage,
         allowFastSpeed,
         reduceMotion,
         positionKeys,
@@ -117,8 +123,8 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   // Sync local storage values with the main settings state
   useEffect(() => {
-    setSettings(prev => ({ ...prev, theme, language, allowFastSpeed, reduceMotion, positionKeys, audioKeys, autoAdjustNLevel, highAccuracyThreshold, lowAccuracyThreshold }));
-  }, [theme, language, allowFastSpeed, reduceMotion, positionKeys, audioKeys, autoAdjustNLevel, highAccuracyThreshold, lowAccuracyThreshold]);
+    setSettings(prev => ({ ...prev, theme, language, followSystemLanguage, allowFastSpeed, reduceMotion, positionKeys, audioKeys, autoAdjustNLevel, highAccuracyThreshold, lowAccuracyThreshold }));
+  }, [theme, language, followSystemLanguage, allowFastSpeed, reduceMotion, positionKeys, audioKeys, autoAdjustNLevel, highAccuracyThreshold, lowAccuracyThreshold]);
 
   // Effect to apply theme and language changes globally
   useEffect(() => {
@@ -141,6 +147,25 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
     }
   }, [settings.theme, settings.language, settings.reduceMotion, i18n]);
 
+  // Effect to sync with system language when the toggle is turned on
+  useEffect(() => {
+    // Do not run on initial mount, wait for settings to be loaded
+    if (isLoading) {
+      return;
+    }
+
+    if (settings.followSystemLanguage) {
+      const syncWithSystem = async () => {
+        const systemLocale = await locale();
+        const newLanguage = systemLocale?.toLowerCase().startsWith('zh') ? 'zh_cn' : 'en';
+        if (settings.language !== newLanguage) {
+          setSettings(prev => ({ ...prev, language: newLanguage }));
+        }
+      };
+      syncWithSystem();
+    }
+  }, [settings.followSystemLanguage, isLoading]);
+
   const isDirty = JSON.stringify(initialState) !== JSON.stringify(settings);
 
   const saveSettings = async () => {
@@ -154,6 +179,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
     // Update local storage values
     setTheme(settings.theme);
     setLanguage(settings.language);
+    setFollowSystemLanguage(settings.followSystemLanguage);
     setAllowFastSpeed(settings.allowFastSpeed);
     setReduceMotion(settings.reduceMotion);
     setPositionKeys(settings.positionKeys);
@@ -172,6 +198,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
     // Reset all local storage values to default
     setTheme(defaultSettings.theme);
     setLanguage(defaultSettings.language);
+    setFollowSystemLanguage(defaultSettings.followSystemLanguage);
     setAllowFastSpeed(defaultSettings.allowFastSpeed);
     setReduceMotion(defaultSettings.reduceMotion);
     setPositionKeys(defaultSettings.positionKeys);

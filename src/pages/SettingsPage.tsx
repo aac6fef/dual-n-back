@@ -116,6 +116,12 @@ const SettingsPage: React.FC = () => {
 
   // Centralized handler for changing settings
   const handleSettingChange = (key: keyof typeof settings, value: any) => {
+    // Handle language change specially to provide immediate feedback
+    if (key === 'language') {
+      setSettings(prev => ({ ...prev, language: value, followSystemLanguage: false }));
+      return;
+    }
+
     setSettings(prev => {
       const newSettings = { ...prev, [key]: value };
 
@@ -356,6 +362,18 @@ const SettingsPage: React.FC = () => {
               <option value="en">English</option>
               <option value="zh_cn">简体中文</option>
             </select>
+          </SettingItem>
+          <SettingItem
+            isRow
+            icon={<Languages size={18} />}
+            label={t('settings.interface.followSystemLanguage')}
+          >
+            <Switch
+              id="follow-system-language-switcher"
+              label=""
+              checked={settings.followSystemLanguage}
+              onChange={(e) => handleSettingChange('followSystemLanguage', e.target.checked)}
+            />
           </SettingItem>
           <SettingItem
             isRow

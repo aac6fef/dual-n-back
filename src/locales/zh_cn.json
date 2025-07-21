@@ -21,6 +21,7 @@
       "visualFeedback": "视觉反馈",
       "lightTheme": "浅色主题",
       "language": "语言",
+      "followSystemLanguage": "跟随系统语言",
       "reduceMotion": "减弱动画效果"
     },
     "dataManagement": {

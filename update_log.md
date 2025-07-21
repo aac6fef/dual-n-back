@@ -1,6 +1,13 @@
 # Update Log
 
 [**中文更新日志 (Chinese Update Log)**](update_log_cn.md)
+## v0.1.12
+- **[Feature/System Integration]** The application now automatically detects the operating system's language on first launch and sets it as the default.
+- **[Feature]** Added a "Follow System Language" toggle in the settings, allowing users to enable or disable this behavior.
+- **[UI/UX]** When a user manually selects a different language, the "Follow System Language" toggle is now automatically disabled.
+- **[UI/UX]** When the "Follow System Language" toggle is re-enabled, the application language immediately syncs with the current system language without requiring a restart.
+- **[Fix]** Resolved a series of state management bugs that required users to click twice to change language settings.
+
 ## v0.1.11
 - **[Feature]** Added a back button to the history detail page for easy navigation.
 - **[Feature]** Added an intelligent difficulty adjustment feature. The system will now prompt the user to increase or decrease the N-Back level based on their performance.
