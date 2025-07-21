@@ -5,7 +5,7 @@
     "coreTraining": {
       "title": "Core Training",
       "nLevel": "N-Level: {{level}}",
-      "speed": "Speed (ms): {{speed}}",
+      "speed": "Duration per turn (ms): {{speed}}",
       "sessionLength": "Session Length: {{length}}",
       "gridSize": "Grid Size: {{size}}x{{size}}",
       "sessionLengthError": "Session length must be at least {{minLength}} for N-Level {{nLevel}}."
@@ -65,7 +65,7 @@
     "faRate": "FA",
     "nLevel": "N-Level",
     "sessionLength": "Session Length",
-    "speed": "Speed"
+    "speed": "Duration per turn"
   },
   "historyDetail": {
     "title": "Session Details for {{date}}",

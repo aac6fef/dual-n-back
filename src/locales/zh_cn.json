@@ -5,7 +5,7 @@
     "coreTraining": {
       "title": "核心训练",
       "nLevel": "N-Level: {{level}}",
-      "speed": "速度 (ms): {{speed}}",
+      "speed": "每轮持续时长 (ms): {{speed}}",
       "gridSize": "网格尺寸: {{size}}x{{size}}",
       "sessionLength": "会话长度: {{length}}",
       "sessionLengthError": "对于 N-Level {{nLevel}}，会话长度必须至少为 {{minLength}}。"
@@ -65,7 +65,7 @@
     "faRate": "虚警",
     "nLevel": "N-Level",
     "sessionLength": "会话长度",
-    "speed": "速度"
+    "speed": "每轮持续时长"
   },
   "historyDetail": {
     "title": "会话详情 {{date}}",

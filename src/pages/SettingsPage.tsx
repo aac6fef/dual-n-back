@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { invoke } from '@tauri-apps/api/core';
 import { save, confirm } from '@tauri-apps/plugin-dialog';
@@ -7,30 +7,28 @@ import { useSettings } from '../contexts/SettingsContext';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Switch from '../components/ui/Switch';
-import { Sliders, Monitor, Database, Download, CheckCircle, Trash2, Code } from 'lucide-react';
+import {
+  Sliders,
+  Monitor,
+  Database,
+  Download,
+  CheckCircle,
+  Trash2,
+  Code,
+  BrainCircuit,
+  Clock,
+  ListChecks,
+  Languages,
+  Sun,
+  Moon,
+} from 'lucide-react';
 import './SettingsPage.css';
-
-// Hook to prompt user before leaving the page with unsaved changes
-const useBeforeUnload = (when: boolean, message: string) => {
-  useEffect(() => {
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      if (when) {
-        event.preventDefault();
-        event.returnValue = message;
-        return message;
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [when, message]);
-};
 
 const SettingsPage: React.FC = () => {
   const { t } = useTranslation();
-  const { settings, setSettings, saveSettings, resetSettings, isLoading, isDirty } = useSettings();
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'success'>('idle');
+  const { settings, setSettings, saveSettings, resetSettings, isLoading } = useSettings();
   const [isGeneratingHistory, setIsGeneratingHistory] = useState(false);
+  const isInitialMount = useRef(true);
 
   const { n_level, speed_ms, session_length, theme, language, allowFastSpeed } = settings;
 
@@ -38,7 +36,25 @@ const SettingsPage: React.FC = () => {
   const minSessionLength = Math.max(20, 5 * n_level);
   const isSessionLengthInvalid = session_length < minSessionLength;
 
-  useBeforeUnload(isDirty, t('settings.unsavedChanges'));
+  // Auto-save effect with debouncing
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    if (isSessionLengthInvalid) {
+      return;
+    }
+
+    const handler = setTimeout(() => {
+      saveSettings();
+    }, 500); // Debounce saving
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [settings, saveSettings, isSessionLengthInvalid]);
 
   // Effect to adjust session length and speed if settings change make them invalid
   useEffect(() => {
@@ -49,23 +65,6 @@ const SettingsPage: React.FC = () => {
       setSettings(prev => ({ ...prev, speed_ms: minSpeed }));
     }
   }, [n_level, session_length, minSessionLength, speed_ms, minSpeed, setSettings]);
-
-  const handleSave = async () => {
-    if (isSessionLengthInvalid) {
-      alert(t('settings.coreTraining.sessionLengthError', { minLength: minSessionLength, nLevel: n_level }));
-      return;
-    }
-    setSaveStatus('saving');
-    try {
-      await new Promise(resolve => setTimeout(resolve, 200)); // UX delay
-      await saveSettings();
-      setSaveStatus('success');
-      setTimeout(() => setSaveStatus('idle'), 2000);
-    } catch (error) {
-      console.error("Failed to save settings:", error);
-      setSaveStatus('idle');
-    }
-  };
 
   const handleExport = async () => {
     try {
@@ -121,19 +120,17 @@ const SettingsPage: React.FC = () => {
   return (
     <div className="settings-container">
       <h1 className="page-title">{t('settings.title')}</h1>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          handleSave();
-        }}
-      >
+      <div>
         <Card className="settings-card">
           <h2 className="card-title">
             <Sliders size={20} />
             {t('settings.coreTraining.title')}
           </h2>
-          <div className="form-group">
-            <label htmlFor="n-level">{t('settings.coreTraining.nLevel', { level: n_level })}</label>
+          <div className="setting-item">
+            <div className="setting-label">
+              <BrainCircuit size={18} />
+              <span>{t('settings.coreTraining.nLevel', { level: n_level })}</span>
+            </div>
             <input
               type="range"
               id="n-level"
@@ -144,8 +141,11 @@ const SettingsPage: React.FC = () => {
               className="slider"
             />
           </div>
-          <div className="form-group">
-            <label htmlFor="speed">{t('settings.coreTraining.speed', { speed: speed_ms })}</label>
+          <div className="setting-item">
+            <div className="setting-label">
+              <Clock size={18} />
+              <span>{t('settings.coreTraining.speed', { speed: speed_ms })}</span>
+            </div>
             <input
               type="range"
               id="speed"
@@ -157,8 +157,11 @@ const SettingsPage: React.FC = () => {
               className="slider"
             />
           </div>
-          <div className="form-group">
-            <label htmlFor="session-length">{t('settings.coreTraining.sessionLength', { length: session_length })}</label>
+          <div className="setting-item">
+            <div className="setting-label">
+              <ListChecks size={18} />
+              <span>{t('settings.coreTraining.sessionLength', { length: session_length })}</span>
+            </div>
             <input
               type="range"
               id="session-length"
@@ -181,14 +184,23 @@ const SettingsPage: React.FC = () => {
             <Monitor size={20} />
             {t('settings.interface.title')}
           </h2>
-          <Switch
-            id="theme-switcher"
-            label={t('settings.interface.lightTheme')}
-            checked={theme === 'light'}
-            onChange={(e) => setSettings(s => ({ ...s, theme: e.target.checked ? 'light' : 'dark' }))}
-          />
-          <div className="form-group">
-            <label htmlFor="language-select">{t('settings.interface.language')}</label>
+          <div className="setting-item setting-item-row">
+            <div className="setting-label">
+              {theme === 'light' ? <Sun size={18} /> : <Moon size={18} />}
+              <span>{t('settings.interface.lightTheme')}</span>
+            </div>
+            <Switch
+              id="theme-switcher"
+              label=""
+              checked={theme === 'light'}
+              onChange={(e) => setSettings(s => ({ ...s, theme: e.target.checked ? 'light' : 'dark' }))}
+            />
+          </div>
+          <div className="setting-item setting-item-row">
+            <div className="setting-label">
+              <Languages size={18} />
+              <span>{t('settings.interface.language')}</span>
+            </div>
             <select
               id="language-select"
               className="select-input"
@@ -240,12 +252,9 @@ const SettingsPage: React.FC = () => {
         </Card>
 
         <div className="save-button-container">
-          <Button type="submit" loading={saveStatus === 'saving'} disabled={isSessionLengthInvalid || !isDirty}>
-            {saveStatus === 'success' ? <CheckCircle size={16} className="btn-icon" /> : null}
-            {saveStatus === 'success' ? t('settings.saveSuccess') : t('settings.saveButton')}
-          </Button>
+          {/* Save button removed for auto-save functionality */}
         </div>
-      </form>
+      </div>
     </div>
   );
 };
