@@ -13,13 +13,29 @@
   border-radius: 10px;
 }
 
+@keyframes pulse {
+  0%, 100% {
+    background-color: var(--sidebar-color);
+    transform: scale(1);
+    box-shadow: none;
+  }
+  50% {
+    background-color: var(--accent-color);
+    transform: scale(1.05);
+    box-shadow: 0 0 20px var(--accent-color), 0 0 30px var(--accent-color);
+  }
+}
+
 .grid-cell {
   background-color: var(--sidebar-color);
   border-radius: 8px;
-  transition: background-color 0.1s ease-in-out;
 }
 
 .grid-cell.active {
-  background-color: var(--accent-color);
-  box-shadow: 0 0 15px var(--accent-color);
+  animation: pulse 1s ease-in-out; /* The duration will be set dynamically */
+}
+
+.reduce-motion .grid-cell.active {
+  animation: none;
+  background-color: var(--accent-color); /* Static highlight for reduced motion */
 }

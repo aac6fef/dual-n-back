@@ -3,4 +3,19 @@
   border-radius: 8px;
   padding: 1.5rem;
   border: 1px solid var(--card-border-color);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.reduce-motion .card {
+  transition: none;
+}
+
+.reduce-motion .card:hover {
+  transform: none;
+  box-shadow: none;
 }

@@ -32,7 +32,17 @@
 }
 
 .btn:active {
-  transform: scale(0.98);
+  transform: scale(0.97);
+  filter: brightness(0.9);
+}
+
+.reduce-motion .btn {
+  transition: none;
+}
+
+.reduce-motion .btn:active {
+  transform: none;
+  filter: none;
 }
 
 .btn:disabled {

@@ -3,6 +3,19 @@
   align-items: center;
   gap: 1rem;
   text-align: left;
+  transition: transform 0.2s ease-in-out;
+}
+
+.stat-item:hover {
+  transform: scale(1.05);
+}
+
+.reduce-motion .stat-item {
+  transition: none;
+}
+
+.reduce-motion .stat-item:hover {
+  transform: none;
 }
 
 .stat-icon {

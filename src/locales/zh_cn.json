@@ -14,7 +14,8 @@
       "title": "界面",
       "visualFeedback": "视觉反馈",
       "lightTheme": "浅色主题",
-      "language": "语言"
+      "language": "语言",
+      "reduceMotion": "减弱动画效果"
     },
     "dataManagement": {
       "title": "数据管理",

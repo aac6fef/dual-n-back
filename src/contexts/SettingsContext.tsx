@@ -15,6 +15,7 @@ export interface AppSettings extends UserSettings {
   theme: string;
   language: string;
   allowFastSpeed: boolean;
+  reduceMotion: boolean;
 }
 
 // Default settings to be used on first load or if loading fails
@@ -25,6 +26,7 @@ const defaultSettings: AppSettings = {
   theme: 'dark',
   language: 'en',
   allowFastSpeed: false,
+  reduceMotion: false,
 };
 
 // Type for the context value
@@ -52,6 +54,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
   const [theme, setTheme] = useLocalStorage('settings:theme', defaultSettings.theme);
   const [language, setLanguage] = useLocalStorage('settings:language', defaultSettings.language);
   const [allowFastSpeed, setAllowFastSpeed] = useLocalStorage('settings:allowFastSpeed', defaultSettings.allowFastSpeed);
+  const [reduceMotion, setReduceMotion] = useLocalStorage('settings:reduceMotion', defaultSettings.reduceMotion);
 
   const loadSettings = async () => {
     setIsLoading(true);
@@ -62,6 +65,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
         theme,
         language,
         allowFastSpeed,
+        reduceMotion,
       };
       setSettings(fullSettings);
       setInitialState(fullSettings);
@@ -72,6 +76,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
         theme,
         language,
         allowFastSpeed,
+        reduceMotion,
       };
       setSettings(fullSettings);
       setInitialState(fullSettings);
@@ -87,8 +92,8 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   // Sync local storage values with the main settings state
   useEffect(() => {
-    setSettings(prev => ({ ...prev, theme, language, allowFastSpeed }));
-  }, [theme, language, allowFastSpeed]);
+    setSettings(prev => ({ ...prev, theme, language, allowFastSpeed, reduceMotion }));
+  }, [theme, language, allowFastSpeed, reduceMotion]);
 
   // Effect to apply theme and language changes globally
   useEffect(() => {
@@ -100,10 +105,16 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
       root.classList.remove('light-theme');
     }
 
+    if (settings.reduceMotion) {
+      root.classList.add('reduce-motion');
+    } else {
+      root.classList.remove('reduce-motion');
+    }
+
     if (i18n.language !== settings.language) {
       i18n.changeLanguage(settings.language);
     }
-  }, [settings.theme, settings.language, i18n]);
+  }, [settings.theme, settings.language, settings.reduceMotion, i18n]);
 
   const isDirty = JSON.stringify(initialState) !== JSON.stringify(settings);
 
@@ -119,6 +130,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
     setTheme(settings.theme);
     setLanguage(settings.language);
     setAllowFastSpeed(settings.allowFastSpeed);
+    setReduceMotion(settings.reduceMotion);
 
     // Update initial state to reflect the saved state
     setInitialState(settings);
@@ -126,12 +138,16 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
 
   const resetSettings = async () => {
     await invoke('reset_all_data');
+    
     // Reset all local storage values to default
     setTheme(defaultSettings.theme);
     setLanguage(defaultSettings.language);
     setAllowFastSpeed(defaultSettings.allowFastSpeed);
-    // Reload settings from backend (which are now default)
-    await loadSettings();
+    setReduceMotion(defaultSettings.reduceMotion);
+
+    // Directly set the state to default settings
+    setSettings(defaultSettings);
+    setInitialState(defaultSettings);
   };
 
   const value = {

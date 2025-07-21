@@ -22,6 +22,7 @@ import {
   Sun,
   Moon,
   Beaker,
+  ZapOff,
 } from 'lucide-react';
 import './SettingsPage.css';
 
@@ -42,7 +43,7 @@ const SettingsPage: React.FC = () => {
   const [isGeneratingHistory, setIsGeneratingHistory] = useState(false);
   const isInitialMount = useRef(true);
 
-  const { n_level, speed_ms, session_length, theme, language, allowFastSpeed } = settings;
+  const { n_level, speed_ms, session_length, theme, language, allowFastSpeed, reduceMotion } = settings;
 
   const minSpeed = allowFastSpeed ? MIN_SPEED_FAST : MIN_SPEED_NORMAL;
   const minSessionLength = Math.max(MIN_SESSION_BASE, SESSION_LENGTH_FACTOR * n_level);
@@ -233,6 +234,18 @@ const SettingsPage: React.FC = () => {
               <option value="en">English</option>
               <option value="zh_cn">简体中文</option>
             </select>
+          </SettingItem>
+          <SettingItem
+            isRow
+            icon={<ZapOff size={18} />}
+            label={t('settings.interface.reduceMotion')}
+          >
+            <Switch
+              id="reduce-motion-switcher"
+              label=""
+              checked={reduceMotion}
+              onChange={(e) => handleSettingChange('reduceMotion', e.target.checked)}
+            />
           </SettingItem>
         </Card>
 

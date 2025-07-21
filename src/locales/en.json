@@ -14,7 +14,8 @@
       "title": "Interface",
       "visualFeedback": "Visual Feedback",
       "lightTheme": "Light Theme",
-      "language": "Language"
+      "language": "Language",
+      "reduceMotion": "Reduce Motion"
     },
     "dataManagement": {
       "title": "Data Management",

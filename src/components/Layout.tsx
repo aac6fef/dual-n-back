@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Home, Settings, History } from "lucide-react";
 import "./Layout.css";
@@ -7,6 +7,7 @@ const getLinkClass = ({ isActive }: { isActive: boolean }) => (isActive ? "activ
 
 const Layout = () => {
   const { t } = useTranslation();
+  const location = useLocation();
 
   return (
     <div className="app-container">
@@ -35,7 +36,7 @@ const Layout = () => {
           </li>
         </ul>
       </nav>
-      <main className="content">
+      <main className="content fade-in" key={location.pathname}>
         <Outlet />
       </main>
     </div>
