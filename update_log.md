@@ -1,90 +1,86 @@
-# ver 0.1.10
-- **[Bugfix]** 修复了历史记录图表的一系列显示问题：
-  - 通过确保数据点均匀分布，解决了图表拥挤和 N-level 标注消失的问题。
-  - 通过智能判断，确保每个日期标签在图表上只显示一次，避免了重复。
+# Update Log
 
-# ver 0.1.9
-- **[Feature]** 快捷键绑定
+[**中文更新日志 (Chinese Update Log)**](update_log_cn.md)
 
-# ver 0.1.8
-- **[Feature]** 增加了游戏暂停和退出功能。
-- **[Feature]** 当游戏正在进行时，若用户尝试离开页面，会弹出对话框提示，并自动暂停游戏。
-- **[UI]** 将暂停和退出按钮移至游戏界面顶部，以防误触。
+## v0.1.10
+- **[Fix]** Addressed a series of rendering issues in the history charts:
+  - Resolved chart crowding and the disappearance of N-level labels by ensuring even data point distribution.
+  - Prevented duplicate date labels by intelligently ensuring each date appears only once on the chart.
 
-## Whats Next
-- 当正确率 >= 80% 的时候,提示用户提升难度
-- 目前的按钮似乎有不跟手的问题
-- 自动跟随系统语言
-- 自动跟随系统主题
-- 移动端在滑动的时候,最底部有时候会出现一个空的区域
-- 桌面端键盘快捷键绑定
-- 历史记录页面简略显示的卡片目前排版不好
-- 从详情页面退出的功能
+## v0.1.9
+- **[Feature]** Added highly customizable keybinding functionality, allowing users to assign custom keys for core actions.
 
+## v0.1.8
+- **[Feature]** Implemented in-game pause and safe exit mechanisms.
+- **[Feature]** When a game is in progress, the system now automatically pauses and displays a confirmation dialog if the user attempts to navigate away, preventing accidental interruptions.
+- **[UI/UX]** Moved the pause and exit buttons to the top of the game screen to optimize workflow and reduce accidental clicks.
 
-# ver 0.1.7
-- **[Bugfix]** 修复了重置应用时客户端设置（如主题、语言等）不会恢复为默认值的问题。
-- **[Feature/Accessibility]** 在设置中增加了“减弱动画效果”的选项，用于禁用所有UI动画，提升无障碍体验。
-- **[UI/Animation]** 为应用添加了全面的动画效果，提升了整体用户体验。
-- **[UI/Animation]** 页面切换时增加了平滑的淡入过渡效果。
-- **[UI/Animation]** 游戏中的高亮方块增加了与游戏速度同步的“脉冲”式淡入淡出动画。
-- **[UI/Animation]** 增强了所有按钮的按下反馈，提供了更真实的物理交互感。
-- **[UI/Animation]** 为卡片和统计数据组件增加了优雅的悬停动画。
+## v0.1.7
+- **[Fix]** Fixed a bug where client-side settings (like theme, language) were not reverting to their defaults when the application was reset.
+- **[Feature/Accessibility]** Added a "Reduce Motion" option in settings to disable all UI animations, enhancing accessibility.
+- **[UI/Animation]** Introduced comprehensive animations across the app to improve the overall user experience:
+  - Added smooth fade-in transitions for page navigation.
+  - Implemented a "pulsing" fade-in/out animation for the highlighted square in the game, synchronized with the game speed.
+  - Enhanced button press feedback for a more tactile feel.
+  - Added elegant hover animations to cards and stat components.
 
-# ver 0.1.6
-- **[UI]**  微调
-- **[UI]**  设置页面图标
-- **[Refactor]** 前端代码重构
--  **[UI]** 删除设置的保存按钮,现在设置是自动保存的了
+## v0.1.6
+- **[UI/UX]** Made several minor UI tweaks to improve visual consistency.
+- **[UI/UX]** Outfitted the settings page with new icons for better recognizability.
+- **[Refactor]** Conducted a major refactoring of the frontend codebase, optimizing the project structure and maintainability.
+- **[Feature]** Removed the "Save" button from the settings page; all settings are now auto-saved and take effect immediately.
 
+## v0.1.5
+- **[UI/UX]** Optimized the history page chart layout to a single-column view with vertical scrolling to accommodate more data.
+- **[UI/UX]** Added horizontal scrolling to history charts and set a minimum width for data points to prevent crowding.
+- **[UI/UX]** Redesigned chart legends as independent, responsive components above the charts to resolve issues with them being obscured or disappearing on scroll.
+- **[UI/UX]** Fixed the Y-axis maximum of the "Hit Rate" and "False Alarm Rate" charts to 100 for easier trend comparison.
+- **[UI/UX]** Standardized the number formatting in all chart tooltips to two decimal places.
+- **[Refactor]** Refactored the history page's chart components to support dynamic widths and custom legends.
 
-# ver 0.1.5
-- **[UI]** 优化了历史记录页面的图表布局，改为每行一个图表，并增加了垂直滚动区域。
-- **[UI]** 为历史图表增加了横向滚动功能，并确保数据点有最小宽度，防止因数据过多而拥挤。
-- **[UI]** 将历史图表的图例修改为独立的响应式元素，位于图表上方，解决了滚动时遮挡或消失的问题。
-- **[UI]** 将“命中率”和“失误率”图表的Y轴最大值统一固定为100，方便趋势对比。
-- **[UI]** 将所有图表在提示框中显示的数值统一格式化，四舍五入到两位小数。
-- **[Refactor]** 重构了历史页面的图表组件，以支持动态宽度和自定义图例。
+## v0.1.4
+- **[Feature]** Completely overhauled the history module to provide more powerful data analysis capabilities.
+- **[Feature]** Added long-term trend charts for hit rate and false alarm rate to the history page.
+- **[Feature]** Implemented clickable session details pages for in-depth review.
+- **[Feature]** Displayed a precise chronological sequence of visual and auditory stimuli on the details page.
+- **[Feature]** On the details page, system-expected matches are highlighted with a border, and user keypresses are marked with an underline for intuitive review.
+- **[Feature]** Added a legend for color blocks and their corresponding coordinates (0-8) on the details page, with clear text explanations.
+- **[Feature]** Added detailed session statistics to the details page, including hit rate, miss rate, false alarm rate, and correct rejection rate.
+- **[Refactor]** Refactored the backend data persistence structure to support more granular event logging.
+- **[UI/UX]** Optimized the responsive design of the history list and details pages for various screen widths.
+- **[UI/UX]** Improved the color contrast of numbers and underlines within the visual stimulus blocks on the details page for clarity.
+- **[Fix]** Fixed a critical bug that prevented the game page from functioning correctly after the backend refactor.
 
-# ver 0.1.4
-- **[Feature]** 全面重构了历史记录页面，提供了更丰富的数据分析功能。
-- **[Feature]** 在历史记录页面增加了命中率和虚警率的趋势图表。
-- **[Feature]** 实现了可点击的历史会话详情页，用于深度复盘。
-- **[Feature]** 在详情页中，以序列方式展示了每一次的视觉和听觉刺激。
-- **[Feature]** 在详情页中，通过边框高亮系统预期的匹配项，通过下划线标出用户的实际按键操作。
-- **[Feature]** 在详情页中，增加了色块与坐标（0-8）对应的图例说明，并为图例本身添加了更清晰的文字解释。
-- **[Feature]** 在详情页中，增加了该次会话的详细统计数据，包括命中率、漏报率、虚警率和正确拒绝率。
-- **[Refactor]** 重构了后端的数据存储结构，以支持更详细的事件记录。
-- **[UI]** 优化了历史记录列表和详情页的响应式设计，以适应不同宽度的屏幕。
-- **[UI]** 优化了详情页视觉刺激方块中数字和下划线的颜色对比度，确保在不同色块背景下都清晰可见。
-- **[Bugfix]** 修复了因后端重构导致游戏页面无法正常工作的问题。
+## v0.1.3
+- **[Feature]** Added developer options, including the ability to set ultra-short stimulus intervals and generate fake history data for testing.
+- **[Feature]** Added an "Reset Application" feature to clear all history and user settings with one click.
+- **[Refactor]** Removed the "Visual Feedback" option from settings to simplify configuration.
+- **[Refactor]** Hardcoded the grid size to 3x3 and removed the corresponding option from settings to standardize the training protocol.
+- **[UI/UX]** Adjusted the spacing of data management buttons on the settings page.
+- **[Fix]** Fixed an issue where generating fake history data could cause the UI to freeze.
 
-# ver 0.1.3
-- **[Feature]** 添加了开发者选项，包括允许超短间隔和生成虚假历史数据的功能。
-- **[Feature]** 添加了重置应用功能，可以一键清空所有历史记录和设置。
-- **[Refactor]** 删除了设置中的视觉反馈选项。
-- **[Refactor]** 将网格尺寸硬编码为 3x3，并从设置中移除了该选项。
-- **[UI]** 调整了设置页面中数据管理按钮的间距。
-- **[Bugfix]** 修复了生成虚假历史记录时可能导致界面卡死的问题。
+## v0.1.2
+- **[Feature]** When a user misses a match, an animated red error icon is now displayed as instant feedback.
+- **[Fix]** Fixed an issue where component icons were not colored correctly in dark mode.
 
-# ver 0.1.2
-- **[Feature]** 在用户错过匹配时，游戏界面会显示一个带动画的红色错误图标作为提示。
-- **[Bugfix]** 修复了深色模式下 `InfoPanel` 组件图标颜色不正确的问题。
+## v0.1.1
+- **[Fix]** Fixed a bug that caused no sound on Android (by converting audio files from .aiff to .wav).
+- **[Fix]** Fixed a bug where not all user settings were loaded on game start.
+- **[UI/UX]** Improved the real-time data display panel on the game screen.
+- **[Audio]** Adopted more standard and natural-sounding letter recordings to improve the clarity of auditory stimuli.
 
+## Roadmap
 
-# ver 0.1.1
-- **[Bugfix]** 修复 Android 没声音的问题(音频文件由aiff转换为wav)
-- **[Bugfix]** 修复游戏启动时不会加载所有设置的bug
-- **[UI]** 游戏进行页面的数据展示
-- **[Audio]** 采用了中式发音的字母(采用Apple Say方案),更适合中国宝宝体质
-## Whats Next
+### Feature Enhancements
+- **Intelligent Difficulty Suggestions**: Proactively prompt users to increase the N-Back level when their accuracy consistently exceeds 80%.
+- **System Integration**: Automatically sync with the operating system's language and theme (dark/light) settings.
+- **Exit Functionality**: Add a convenient back/exit function to the history detail page.
 
-- 设置页面自动保存,还原设置按钮
-- 新的算法,目前的算法不够科学(就是很烂)
-- 采用认知理论的分析,分析测试者是否在乱猜
-- 修复bug
-- 历史页面会有更加详细的数据展示
-- 漏掉会有提示
-## Bugs
-- 现在的速率有bug
-- 历史页面有bug
+### UI/UX Improvements
+- **Response Latency**: Address the minor delay in button responsiveness to improve the tactile feel.
+- **Mobile Layout**: Fix the issue where an empty space occasionally appears at the bottom of the mobile view when scrolling.
+- **History Cards**: Redesign the summary cards on the history page to optimize their layout and information density.
+
+### Core Algorithm
+- **New Algorithm Implementation**: Develop and integrate a more scientifically robust training algorithm to replace the current basic implementation.
+- **Data Analysis**: Introduce an analysis model based on cognitive theory to detect whether a user is guessing during training sessions.

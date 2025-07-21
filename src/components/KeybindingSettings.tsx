@@ -1,5 +1,4 @@
 import React from 'react';
-import { useTranslation } from 'react-i18next';
 import './KeybindingSettings.css';
 
 interface KeybindingSettingsProps {
@@ -10,7 +9,7 @@ interface KeybindingSettingsProps {
 }
 
 const KeybindingSettings: React.FC<KeybindingSettingsProps> = ({ title, keys, onAdd, onRemove }) => {
-  const { t } = useTranslation();
+  
 
   return (
     <div className="keybinding-settings">

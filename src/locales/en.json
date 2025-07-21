@@ -91,7 +91,9 @@
       "missRate": "Miss Rate",
       "faRate": "False Alarm Rate",
       "crRate": "Correct Rejection"
-    }
+    },
+    "postGamePrompt": "This is a game that just ended. You can review it at any time on the <0>History</0> page.",
+    "playAgainSameSettings": "Play again with the same settings"
   },
   "game": {
     "title": "Dual N-Back",
