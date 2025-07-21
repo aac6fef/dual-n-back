@@ -1,9 +1,12 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import { Pause, Play, X } from 'lucide-react';
 import { invoke } from '@tauri-apps/api/core';
 import { useSettings } from '../contexts/SettingsContext';
-import { BrainCircuit, Timer, Target, Ear, AlertCircle, History } from 'lucide-react';
+import { useGameStatus } from '../contexts/GameStatusContext';
+import { usePause } from '../contexts/PauseContext';
+import { BrainCircuit, Timer} from 'lucide-react';
 
 import Button from '../components/ui/Button';
 import Grid from '../components/Grid';
@@ -48,9 +51,12 @@ interface UserResponse {
 const GamePage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { setIsGameRunning } = useGameStatus();
+  const { setPauseListener } = usePause();
   const { settings: contextSettings, isLoading: settingsLoading } = useSettings();
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const userResponseRef = useRef<UserResponse>({ visual_match: false, audio_match: false });
   const previousMatchStatusRef = useRef({ isVisualMatch: false, isAudioMatch: false });
@@ -65,9 +71,25 @@ const GamePage: React.FC = () => {
   const [audioMissed, setAudioMissed] = useState(false);
   const audioCache = useRef<Record<string, HTMLAudioElement>>({});
 
+  // --- Pause Listener Effect ---
+  useEffect(() => {
+    // Register a listener that can be called from other components
+    const pauseListener = () => {
+      if (gameState?.isRunning && !isPaused) {
+        setIsPaused(true);
+      }
+    };
+    setPauseListener(pauseListener);
+
+    // Cleanup listener on component unmount
+    return () => {
+      setPauseListener(null);
+    };
+  }, [gameState?.isRunning, isPaused, setPauseListener]);
+
   // --- Audio Playback Effect ---
   useEffect(() => {
-    if (gameState?.isRunning) {
+    if (gameState?.isRunning && !isPaused) {
       const letter = gameState.currentStimulus?.audio_stimulus.letter;
       if (letter) {
         const soundName = `letter_${letter}.mp3`;
@@ -105,7 +127,7 @@ const GamePage: React.FC = () => {
 
   // --- Game Loop Effect ---
   useEffect(() => {
-    if (!gameState || !gameState.isRunning) {
+    if (!gameState || !gameState.isRunning || isPaused) {
       return;
     }
 
@@ -141,6 +163,7 @@ const GamePage: React.FC = () => {
         } else {
           // Game is over. Update state and set transitioning flag to prevent UI flash.
           setGameState(s => s ? { ...s, isRunning: false } : null);
+          setIsGameRunning(false);
           setIsTransitioning(true);
           
           // Use a new timer that is NOT tracked by the effect's cleanup ref.
@@ -165,6 +188,7 @@ const GamePage: React.FC = () => {
       } catch (error) {
         console.error("Failed to advance turn:", error);
         setGameState(s => s ? { ...s, isRunning: false } : null);
+        setIsGameRunning(false);
       }
     }, gameSpeed);
 
@@ -173,7 +197,7 @@ const GamePage: React.FC = () => {
         clearTimeout(gameLoopTimerRef.current);
       }
     };
-  }, [gameState, navigate]);
+  }, [gameState, navigate, isPaused]);
 
   const handleStartGame = useCallback(async () => {
     setIsLoading(true);
@@ -182,6 +206,9 @@ const GamePage: React.FC = () => {
       await invoke('start_game');
       const newState = await invoke<GameState>('get_game_state');
       setGameState(newState);
+      if (newState.isRunning) {
+        setIsGameRunning(true);
+      }
       userResponseRef.current = { visual_match: false, audio_match: false };
       setHasRespondedVisual(false);
       setHasRespondedAudio(false);
@@ -210,6 +237,18 @@ const GamePage: React.FC = () => {
     setAudioFeedback(isCorrect ? 'correct' : 'incorrect');
     setHasRespondedAudio(true);
     userResponseRef.current.audio_match = true;
+  };
+
+  const handlePauseToggle = () => {
+    setIsPaused(prev => !prev);
+  };
+
+  const handleQuitGame = () => {
+    // Stop the timer by setting isRunning to false
+    setGameState(s => s ? { ...s, isRunning: false } : null);
+    setIsGameRunning(false);
+    // Navigate back to the home page
+    navigate('/');
   };
 
   const renderGameContent = () => {
@@ -244,6 +283,16 @@ const GamePage: React.FC = () => {
           visualHitRate={gameState.visualHitRate * 100}
           audioHitRate={gameState.audioHitRate * 100}
         />
+        <div className="game-actions">
+          <Button onClick={handlePauseToggle} variant="secondary" className="action-btn">
+            {isPaused ? <Play /> : <Pause />}
+            {isPaused ? t('game.resume') : t('game.pause')}
+          </Button>
+          <Button onClick={handleQuitGame} variant="danger" className="action-btn">
+            <X />
+            {t('game.quit')}
+          </Button>
+        </div>
         <Grid
           key={gameState.currentTurnIndex}
           activeIndex={gameState.currentStimulus?.visual_stimulus.position ?? null}

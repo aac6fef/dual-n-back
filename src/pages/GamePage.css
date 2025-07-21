@@ -30,9 +30,24 @@
 }
 
 .start-game-btn {
-  width: 100%;
-  padding: 1rem;
+  margin-top: 2rem;
+  padding: 0.8rem 2.5rem;
   font-size: 1.2rem;
+}
+
+.game-actions {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem; /* Add margin below the buttons */
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
 }
 
 .pre-game-info {
