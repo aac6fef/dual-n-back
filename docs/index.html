@@ -3,18 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dual N-Back: Advanced Cognitive Training</title>
+    <title>Dual N-Back: Advanced Cognitive Training & Developer Guide</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <header class="hero">
         <div class="container">
+            <div class="language-switcher">
+                <span>English</span> | <a href="index_cn.html">中文</a>
+            </div>
             <h1>Dual N-Back</h1>
             <p class="subtitle">Advanced Cognitive Training Application</p>
             <p>Systematically enhance your working memory, attention, and fluid intelligence with the scientifically validated Dual N-Back task.</p>
             <a href="https://github.com/aac6fef/dual-n-back/releases" class="cta-button">Download Now</a>
         </div>
     </header>
+
+    <nav class="main-nav">
+        <div class="container">
+            <ul>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#why-n-back">Why N-Back</a></li>
+                <li><a href="#screenshots">Preview</a></li>
+                <li><a href="#how-to-play">How to Play</a></li>
+                <li><a href="#tech-stack">Tech Stack</a></li>
+            </ul>
+        </div>
+    </nav>
 
     <main>
         <section id="features" class="features">
@@ -49,6 +64,16 @@
             </div>
         </section>
 
+        <section id="why-n-back" class="why-n-back">
+            <div class="container">
+                <h2>Why Dual N-Back?</h2>
+                <div class="why-n-back-content">
+                    <p>In a world of constant distractions, a strong working memory is more valuable than ever. It's the foundation for focus, problem-solving, and learning. The Dual N-Back task is not just another brain game; it's a scientifically-backed method to train this crucial cognitive skill.</p>
+                    <p>Consistent practice can lead to measurable improvements in fluid intelligence—your ability to reason and solve novel problems. This app is your personal gym for the mind, designed to help you reach your full cognitive potential.</p>
+                </div>
+            </div>
+        </section>
+
         <section id="screenshots" class="screenshots">
             <div class="container">
                 <h2>Application Preview</h2>
@@ -77,6 +102,72 @@
                         <img src="./screenshot/en/difficulty.png" alt="Difficulty Curve">
                         <figcaption>Difficulty Curve: See your improvement over time</figcaption>
                     </figure>
+                    <figure>
+                        <img src="./screenshot/en/history_detail.png" alt="Detailed History">
+                        <figcaption>Detailed History: Review every trial</figcaption>
+                    </figure>
+                    <figure>
+                        <img src="./screenshot/en/history_detail_event.png" alt="Event Sequence">
+                        <figcaption>Event Sequence: See the full event log</figcaption>
+                    </figure>
+                </div>
+            </div>
+        </section>
+
+        <section id="how-to-play" class="features">
+            <div class="container">
+                <h2 class="section-title">How to Play</h2>
+                <p class="section-subtitle">
+                    Dual N-Back challenges you to track two separate sequences of stimuli at the same time. Your goal is to identify when a stimulus matches one from 'N' steps back in the sequence. Try the interactive simulator below to understand the core mechanics!
+                </p>
+                <div class="mechanics-grid">
+                    <div class="card">
+                        <span class="icon">👁️ + 👂</span>
+                        <h3>Dual Task</h3>
+                        <p>
+                            Pay attention to two things at once: a <strong>visual cue</strong> (a square lighting up in a grid) and an <strong>audio cue</strong> (a letter being spoken).
+                        </p>
+                    </div>
+                    <div class="card">
+                        <span class="icon">🧠🔙</span>
+                        <h3>N-Back Memory</h3>
+                        <p>
+                            When you see a new square or hear a new letter, decide if it matches the one from <strong>'N' steps ago</strong>. For example, if N=2, you're looking for a match with the stimulus from two turns before.
+                        </p>
+                    </div>
+                </div>
+                <div class="simulator-container">
+                        <div class="visual-simulator">
+                            <h4>Visual Task (3x3 Grid)</h4>
+                            <div id="visual-grid" class="grid-container">
+                            </div>
+                        </div>
+                        <div class="controls-simulator">
+                            <h4>Auditory Task & Controls</h4>
+                            <div class="audio-stimulus-display">
+                                <p>Current Auditory Stimulus:</p>
+                                <p id="audio-stimulus">-</p>
+                                <p>N-Back: <span id="audio-n-back">-</span></p>
+                            </div>
+                            <div class="controls-group">
+                                 <p>Select N-Level:</p>
+                                 <div id="n-level-selector" class="n-level-buttons">
+                                     <button data-n="1" class="btn">N=1</button>
+                                     <button data-n="2" class="btn">N=2</button>
+                                     <button data-n="3" class="btn">N=3</button>
+                                 </div>
+                            </div>
+                            <div class="controls-group">
+                                <div class="action-buttons">
+                                    <button id="next-trial-btn" class="btn btn-primary">Next Step (Trial <span id="trial-count">0</span>)</button>
+                                </div>
+                                <button id="reset-btn">Reset</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="explanation" class="explanation-box info">
+                        Select an N-level and click "Next Step" to start the simulation.
+                    </div>
                 </div>
             </div>
         </section>

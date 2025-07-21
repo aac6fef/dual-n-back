@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dual N-Back: 高级认知训练 & 开发指南</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header class="hero">
+        <div class="container">
+            <div class="language-switcher">
+                <a href="index.html">English</a> | <span>中文</span>
+            </div>
+            <h1>Dual N-Back</h1>
+            <p class="subtitle">高级认知训练应用</p>
+            <p>通过经过科学验证的 Dual N-Back 任务，系统地提升您的工作记忆、注意力和流体智力。</p>
+            <a href="https://github.com/aac6fef/dual-n-back/releases" class="cta-button">立即下载</a>
+        </div>
+    </header>
+
+    <nav class="main-nav">
+        <div class="container">
+            <ul>
+                <li><a href="#features">核心特性</a></li>
+                <li><a href="#why-n-back">为何选择</a></li>
+                <li><a href="#screenshots">应用预览</a></li>
+                <li><a href="#how-to-play">玩法介绍</a></li>
+                <li><a href="#tech-stack">技术栈</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main>
+        <section id="features" class="features">
+            <div class="container">
+                <h2>核心特性</h2>
+                <div class="feature-grid">
+                    <div class="feature-item">
+                        <h3>🚀 科学训练</h3>
+                        <p>基于经典的 Dual N-Back 任务，经证明可有效提升工作记忆和流体智力。</p>
+                    </div>
+                    <div class="feature-item">
+                        <h3>🎨 沉浸式体验</h3>
+                        <p>现代、直观的用户界面，流畅的动画和音频反馈，为您打造一个无干扰的训练环境。</p>
+                    </div>
+                    <div class="feature-item">
+                        <h3>⚙️ 精细化调整</h3>
+                        <p>高度灵活的设置，可调整 N-Back 等级、速度等参数，以满足您的个性化训练需求。</p>
+                    </div>
+                    <div class="feature-item">
+                        <h3>📊 全面追踪</h3>
+                        <p>自动记录详细的会话数据，包括命中率、虚警率和 d' 等指标。</p>
+                    </div>
+                    <div class="feature-item">
+                        <h3>📈 深度洞察</h3>
+                        <p>通过直观的图表可视化长期表现数据，追踪您的认知能力趋势。</p>
+                    </div>
+                    <div class="feature-item">
+                        <h3>💻 跨平台支持</h3>
+                        <p>使用 Tauri 构建，在 Windows、macOS 和 Linux 上提供原生、流畅的体验。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="why-n-back" class="why-n-back">
+            <div class="container">
+                <h2>为什么选择 Dual N-Back？</h2>
+                <div class="why-n-back-content">
+                    <p>在一个充满干扰的世界里，强大的工作记忆比以往任何时候都更有价值。它是专注力、解决问题和学习能力的基础。Dual N-Back 任务不仅仅是又一个大脑游戏；它是一种有科学依据的方法，用于训练这项至关重要的认知技能。</p>
+                    <p>持续的练习可以显著提高流体智力——即您的推理和解决新问题的能力。这款应用是您思维的私人健身房，旨在帮助您充分发挥认知潜力。</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="screenshots" class="screenshots">
+            <div class="container">
+                <h2>应用预览</h2>
+                <div class="screenshot-gallery">
+                    <figure>
+                        <img src="./screenshot/en/game_page.png" alt="游戏页面">
+                        <figcaption>游戏页面：简洁、专注的界面</figcaption>
+                    </figure>
+                    <figure>
+                        <img src="./screenshot/en/game_started.png" alt="游戏开始">
+                        <figcaption>游戏进行中：视觉与听觉刺激</figcaption>
+                    </figure>
+                    <figure>
+                        <img src="./screenshot/en/settings.png" alt="设置页面">
+                        <figcaption>设置：定制您的训练体验</figcaption>
+                    </figure>
+                    <figure>
+                        <img src="./screenshot/en/history_hr.png" alt="历史记录页面">
+                        <figcaption>历史记录：追踪您的会话表现</figcaption>
+                    </figure>
+                    <figure>
+                        <img src="./screenshot/en/false_alarm_trend.png" alt="趋势分析">
+                        <figcaption>趋势分析：可视化您的长期进展</figcaption>
+                    </figure>
+                    <figure>
+                        <img src="./screenshot/en/difficulty.png" alt="难度曲线">
+                        <figcaption>难度曲线：见证您随时间的进步</figcaption>
+                    </figure>
+                    <figure>
+                        <img src="./screenshot/en/history_detail.png" alt="详细历史记录">
+                        <figcaption>详细历史记录：回顾每一次试验</figcaption>
+                    </figure>
+                    <figure>
+                        <img src="./screenshot/en/history_detail_event.png" alt="事件序列">
+                        <figcaption>事件序列：查看完整的事件日志</figcaption>
+                    </figure>
+                </div>
+            </div>
+        </section>
+
+        <section id="how-to-play" class="features">
+            <div class="container">
+                <h2 class="section-title">玩法介绍</h2>
+                <p class="section-subtitle">
+                    Dual N-Back 挑战您同时追踪两种独立的刺激序列。您的目标是判断当前出现的刺激是否与'N'步前的刺激相匹配。通过下面的交互式模拟器来理解核心玩法吧！
+                </p>
+                <div class="mechanics-grid">
+                    <div class="card">
+                        <span class="icon">👁️ + 👂</span>
+                        <h3>双重任务</h3>
+                        <p>
+                            同时关注两件事：一个<strong>视觉提示</strong>（方块在网格中亮起）和一个<strong>听觉提示</strong>（一个字母的发音）。
+                        </p>
+                    </div>
+                    <div class="card">
+                        <span class="icon">🧠🔙</span>
+                        <h3>N-Back 记忆</h3>
+                        <p>
+                            当您看到新的方块或听到新的字母时，判断它是否与<strong>'N'步前</strong>的刺激相匹配。例如，当N=2时，您需要寻找与两轮前的刺激是否匹配。
+                        </p>
+                    </div>
+                </div>
+                <div class="simulator-container">
+                        <div class="visual-simulator">
+                            <h4>视觉任务 (3x3 网格)</h4>
+                            <div id="visual-grid" class="grid-container">
+                            </div>
+                        </div>
+                        <div class="controls-simulator">
+                            <h4>听觉任务 & 控制</h4>
+                            <div class="audio-stimulus-display">
+                                <p>当前听觉刺激:</p>
+                                <p id="audio-stimulus">-</p>
+                                <p>N步前: <span id="audio-n-back">-</span></p>
+                            </div>
+                            <div class="controls-group">
+                                 <p>选择 N 值:</p>
+                                 <div id="n-level-selector" class="n-level-buttons">
+                                     <button data-n="1" class="btn">N=1</button>
+                                     <button data-n="2" class="btn">N=2</button>
+                                     <button data-n="3" class="btn">N=3</button>
+                                 </div>
+                            </div>
+                            <div class="controls-group">
+                                <div class="action-buttons">
+                                    <button id="next-trial-btn" class="btn btn-primary">下一步 (第 <span id="trial-count">0</span> 轮)</button>
+                                </div>
+                                <button id="reset-btn">重置</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="explanation" class="explanation-box info">
+                        请选择N值并点击“下一步”开始模拟。
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="tech-stack" class="tech-stack">
+            <div class="container">
+                <h2>技术栈</h2>
+                <ul>
+                    <li>React</li>
+                    <li>TypeScript</li>
+                    <li>Vite</li>
+                    <li>Tauri</li>
+                    <li>Recharts</li>
+                    <li>i18next</li>
+                </ul>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 Dual N-Back. 保留所有权利。</p>
+            <p>根据 MIT 许可证授权。</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+
+    <div id="myModal" class="modal">
+        <span class="close-modal">&times;</span>
+        <img class="modal-content" id="img01">
+    </div>
+</body>
+</html>
