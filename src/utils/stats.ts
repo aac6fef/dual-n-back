@@ -50,11 +50,27 @@ const calculateRate = (numerator: number, denominator: number): number => {
   return (numerator / denominator) * 100;
 };
 
+/**
+ * Calculates accuracy based on the average of Sensitivity and Specificity.
+ * Accuracy = (Sensitivity + Specificity) / 2
+ * Sensitivity (Hit Rate) = TP / (TP + FN)
+ * Specificity (Correct Rejection Rate) = TN / (TN + FP)
+ * @param stats The accuracy statistics for a given modality.
+ * @returns The calculated accuracy as a percentage (0-100).
+ */
 export const calculateAccuracy = (stats: AccuracyStats): number => {
-  if (stats.true_positives === 0) return 0.0;
-  const totalTrials = stats.true_positives + stats.false_negatives + stats.true_negatives + stats.false_positives;
-  if (totalTrials === 0) return 100.0;
-  return ((stats.true_positives + stats.true_negatives) / totalTrials) * 100;
+  const { true_positives: tp, true_negatives: tn, false_positives: fp, false_negatives: fn } = stats;
+
+  // Sensitivity = TP / (TP + FN)
+  // If there were no actual matches (TP + FN = 0), sensitivity is considered perfect (1.0).
+  const sensitivity = (tp + fn) > 0 ? tp / (tp + fn) : 1.0;
+
+  // Specificity = TN / (TN + FP)
+  // If there were no actual non-matches (TN + FP = 0), specificity is considered perfect (1.0).
+  const specificity = (tn + fp) > 0 ? tn / (tn + fp) : 1.0;
+
+  // The final accuracy is the average of sensitivity and specificity, converted to a percentage.
+  return ((sensitivity + specificity) / 2) * 100;
 };
 
 export const getCalculatedStats = (stats: AccuracyStats) => {

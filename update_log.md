@@ -1,6 +1,9 @@
 # Update Log
 
 [**中文更新日志 (Chinese Update Log)**](update_log_cn.md)
+## v0.1.15
+- **[Refactor]** Overhauled the core accuracy calculation algorithm to provide a more scientifically sound metric. The new formula, `Accuracy = (Sensitivity + Specificity) / 2`, is now used consistently across the in-game UI, history charts, and the automatic difficulty adjustment logic.
+
 ## v0.1.14
 - **[Fix/Layout]** Resolved an issue on Android where the app's page was larger than the available area, causing the entire application to move with finger swipes.
 - **[Fix/Layout]** Fixed a bug on all platforms that allowed the entire page to be scrolled horizontally, which caused UI elements to move unexpectedly.

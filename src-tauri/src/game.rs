@@ -46,19 +46,32 @@ pub struct AccuracyStats {
 }
 
 impl AccuracyStats {
-    /// Calculates the Hit Rate (Sensitivity).
-    /// Formula: True Positives / (True Positives + False Negatives)
+    /// Calculates accuracy based on the average of Sensitivity and Specificity.
+    /// Accuracy = (Sensitivity + Specificity) / 2
+    /// Sensitivity = TP / (TP + FN)
+    /// Specificity = TN / (TN + FP)
     /// Returns a value between 0.0 and 1.0.
     pub fn calculate_accuracy(&self) -> f32 {
-        if self.true_positives == 0 {
-            return 0.0;
-        }
-        let total_trials = self.true_positives + self.true_negatives + self.false_positives + self.false_negatives;
-        if total_trials == 0 {
-            0.0
+        let tp = self.true_positives as f32;
+        let tn = self.true_negatives as f32;
+        let fp = self.false_positives as f32;
+        let f_n = self.false_negatives as f32;
+
+        // Sensitivity = TP / (TP + FN)
+        let sensitivity = if (tp + f_n) > 0.0 {
+            tp / (tp + f_n)
         } else {
-            (self.true_positives + self.true_negatives) as f32 / total_trials as f32
-        }
+            1.0 // If there were no "match" trials, sensitivity is perfect.
+        };
+
+        // Specificity = TN / (TN + FP)
+        let specificity = if (tn + fp) > 0.0 {
+            tn / (tn + fp)
+        } else {
+            1.0 // If there were no "non-match" trials, specificity is perfect.
+        };
+
+        (sensitivity + specificity) / 2.0
     }
 
 
