@@ -8,7 +8,18 @@
       "speed": "每轮持续时长 (ms): {{speed}}",
       "gridSize": "网格尺寸: {{size}}x{{size}}",
       "sessionLength": "会话长度: {{length}}",
-      "sessionLengthError": "对于 N-Level {{nLevel}}，会话长度必须至少为 {{minLength}}。"
+      "sessionLengthError": "对于 N-Level {{nLevel}}，会话长度必须至少为 {{minLength}}。",
+      "auditoryStimulusSet": "听力字符集",
+      "auditoryStimulusSets": {
+        "allLetters": "全体英文字母",
+        "nonConfusingLetters": "不易被混淆的英文字母",
+        "tiangandizhi": "天干地支"
+      },
+      "auditoryStimulusSetDescriptions": {
+        "AllLetters": "包含从 A 到 Z 的26个标准英文字母。N-Back 训练的经典选择。",
+        "NonConfusingLetters": "一组精心挑选的英文字母 (A, K, Q, R, U, W, H, L, O)，它们的发音区别明显，有助于减少听觉混淆。",
+        "TianGanDiZhi": "使用普通话发音的天干地支，为您的工作记忆带来独特的挑战。"
+      }
     },
     "intelligentAdjustment": {
       "title": "智能调整",

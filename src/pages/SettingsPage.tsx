@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { invoke } from '@tauri-apps/api/core';
 import { save, confirm } from '@tauri-apps/plugin-dialog';
 import { writeTextFile } from '@tauri-apps/plugin-fs';
-import { useSettings } from '../contexts/SettingsContext';
+import { useSettings, AuditoryStimulusSet } from '../contexts/SettingsContext';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Switch from '../components/ui/Switch';
@@ -29,6 +29,7 @@ import {
   Grid,
   Volume2,
   Bot,
+  FileAudio,
 } from 'lucide-react';
 import './SettingsPage.css';
 
@@ -50,7 +51,7 @@ const SettingsPage: React.FC = () => {
   const [isListening, setIsListening] = useState<string | null>(null);
   const isInitialMount = useRef(true);
 
-  const { n_level, speed_ms, session_length, theme, language, followSystemTheme, allowFastSpeed, reduceMotion, positionKeys, audioKeys, autoAdjustNLevel, highAccuracyThreshold, lowAccuracyThreshold } = settings;
+  const { n_level, speed_ms, session_length, auditory_stimulus_set, theme, language, followSystemTheme, allowFastSpeed, reduceMotion, positionKeys, audioKeys, autoAdjustNLevel, highAccuracyThreshold, lowAccuracyThreshold } = settings;
 
   const minSpeed = allowFastSpeed ? MIN_SPEED_FAST : MIN_SPEED_NORMAL;
   const minSessionLength = Math.max(MIN_SESSION_BASE, SESSION_LENGTH_FACTOR * n_level);
@@ -283,6 +284,26 @@ const SettingsPage: React.FC = () => {
                   {t('settings.coreTraining.sessionLengthError', { minLength: minSessionLength, nLevel: n_level })}
                 </div>
               )}
+            </>
+          </SettingItem>
+          <SettingItem
+            icon={<FileAudio size={18} />}
+            label={t('settings.coreTraining.auditoryStimulusSet')}
+          >
+            <>
+              <select
+                id="auditory-stimulus-set"
+                className="select-input"
+                value={auditory_stimulus_set}
+                onChange={(e) => handleSettingChange('auditory_stimulus_set', e.target.value as AuditoryStimulusSet)}
+              >
+                <option value={AuditoryStimulusSet.AllLetters}>{t('settings.coreTraining.auditoryStimulusSets.allLetters')}</option>
+                <option value={AuditoryStimulusSet.NonConfusingLetters}>{t('settings.coreTraining.auditoryStimulusSets.nonConfusingLetters')}</option>
+                <option value={AuditoryStimulusSet.TianGanDiZhi}>{t('settings.coreTraining.auditoryStimulusSets.tiangandizhi')}</option>
+              </select>
+              <p className="setting-description">
+                {t(`settings.coreTraining.auditoryStimulusSetDescriptions.${auditory_stimulus_set}`)}
+              </p>
             </>
           </SettingItem>
         </Card>

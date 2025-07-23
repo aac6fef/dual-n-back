@@ -1,6 +1,14 @@
 # Update Log
 
 [**中文更新日志 (Chinese Update Log)**](update_log_cn.md)
+## v0.1.16
+- **[Feature]** Added a new "Auditory Character Set" setting, allowing users to choose from three different sets of auditory stimuli:
+  - **All English Letters**: The standard A-Z set.
+  - **Non-Confusing English Letters**: A curated set with distinct sounds to reduce errors.
+  - **TianGanDiZhi**: The Heavenly Stems and Earthly Branches in Mandarin for a unique challenge.
+- **[UI/UX]** The history detail page now correctly displays the Chinese characters for the TianGanDiZhi set.
+- **[Fix]** The "Generate Fake History" feature now correctly uses all available auditory character sets to create more realistic test data.
+
 ## v0.1.15
 - **[Refactor]** Overhauled the core accuracy calculation algorithm to provide a more scientifically sound metric. The new formula, `Accuracy = (Sensitivity + Specificity) / 2`, is now used consistently across the in-game UI, history charts, and the automatic difficulty adjustment logic.
 

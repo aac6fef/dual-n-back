@@ -8,7 +8,18 @@
       "speed": "Duration per turn (ms): {{speed}}",
       "sessionLength": "Session Length: {{length}}",
       "gridSize": "Grid Size: {{size}}x{{size}}",
-      "sessionLengthError": "Session length must be at least {{minLength}} for N-Level {{nLevel}}."
+      "sessionLengthError": "Session length must be at least {{minLength}} for N-Level {{nLevel}}.",
+      "auditoryStimulusSet": "Auditory Character Set",
+      "auditoryStimulusSets": {
+        "allLetters": "All English Letters",
+        "nonConfusingLetters": "Non-Confusing English Letters",
+        "tiangandizhi": "TianGanDiZhi"
+      },
+      "auditoryStimulusSetDescriptions": {
+        "AllLetters": "The standard set of 26 English letters from A to Z. A classic choice for N-Back training.",
+        "NonConfusingLetters": "A curated set of English letters with highly distinct sounds (A, K, Q, R, U, W, H, L, O) to minimize auditory confusion.",
+        "TianGanDiZhi": "Challenge your working memory with the sounds of the Heavenly Stems and Earthly Branches, spoken in Mandarin."
+      }
     },
     "intelligentAdjustment": {
       "title": "Intelligent Adjustment",

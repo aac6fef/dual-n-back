@@ -3,10 +3,10 @@ use std::sync::Mutex;
 use crate::persistence::UserSettings;
 use crate::sequence_generator;
 
-#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq)]
 pub struct Stimulus {
     pub visual: u8,
-    pub audio: char,
+    pub audio: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq)]
@@ -99,7 +99,7 @@ pub struct GameState {
     
     // Pre-generated sequences for the entire session
     #[serde(skip_serializing)]
-    audio_sequence: Vec<char>,
+    audio_sequence: Vec<String>,
     #[serde(skip_serializing)]
     visual_sequence: Vec<u8>,
 }
@@ -109,6 +109,7 @@ impl GameState {
         let (audio_sequence, visual_sequence) = sequence_generator::generate_dual_nback_sequences(
             settings.n_level,
             settings.session_length,
+            settings.auditory_stimulus_set,
         );
 
         Self {
@@ -131,7 +132,7 @@ impl GameState {
 
         Some(Stimulus {
             visual: self.visual_sequence[self.current_turn_index],
-            audio: self.audio_sequence[self.current_turn_index],
+            audio: self.audio_sequence[self.current_turn_index].clone(),
         })
     }
 }
@@ -148,7 +149,7 @@ impl GameState {
 
         let stimulus = Stimulus {
             visual: self.visual_sequence[turn_idx],
-            audio: self.audio_sequence[turn_idx],
+            audio: self.audio_sequence[turn_idx].clone(),
         };
 
         let mut is_visual_match = false;
@@ -157,7 +158,7 @@ impl GameState {
         if turn_idx >= n {
             let target_stimulus = Stimulus {
                 visual: self.visual_sequence[turn_idx - n],
-                audio: self.audio_sequence[turn_idx - n],
+                audio: self.audio_sequence[turn_idx - n].clone(),
             };
             is_visual_match = stimulus.visual == target_stimulus.visual;
             is_audio_match = stimulus.audio == target_stimulus.audio;
@@ -202,12 +203,14 @@ pub struct AppState(pub Mutex<GameState>);
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::sequence_generator::AuditoryStimulusSet;
 
     fn default_settings() -> UserSettings {
         UserSettings {
             n_level: 2,
             speed_ms: 1000,
             session_length: 5,
+            auditory_stimulus_set: AuditoryStimulusSet::AllLetters,
         }
     }
 
@@ -253,7 +256,7 @@ mod tests {
         let mut game_state = GameState::new(settings);
         
         // Manually override the pre-generated sequences for a predictable test
-        game_state.audio_sequence = vec!['A', 'B', 'C', 'B', 'D'];
+        game_state.audio_sequence = vec!["A".to_string(), "B".to_string(), "C".to_string(), "B".to_string(), "D".to_string()];
         game_state.visual_sequence = vec![1, 2, 1, 4, 1];
         // Expected matches:
         // Turn 2: Visual (1 == 1)
@@ -317,7 +320,7 @@ mod tests {
         settings.session_length = 6;
         let mut game_state = GameState::new(settings);
         
-        game_state.audio_sequence = vec!['A', 'B', 'C', 'A', 'D', 'C'];
+        game_state.audio_sequence = vec!["A".to_string(), "B".to_string(), "C".to_string(), "A".to_string(), "D".to_string(), "C".to_string()];
         game_state.visual_sequence = vec![1, 2, 3, 4, 2, 6];
         // Expected matches:
         // Turn 3: Audio ('A' == 'A')

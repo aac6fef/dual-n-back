@@ -1,8 +1,16 @@
+use serde::{Deserialize, Serialize};
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 use std::collections::HashSet;
 use std::hash::Hash;
 use std::fmt::Debug;
+
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, Eq, PartialEq, Hash)]
+pub enum AuditoryStimulusSet {
+    AllLetters,
+    NonConfusingLetters,
+    TianGanDiZhi,
+}
 
 const LOWER_BOUND_RATIO: f32 = 1.0 / 6.0;
 const UPPER_BOUND_RATIO: f32 = 1.0 / 4.0;
@@ -80,19 +88,35 @@ where
 pub fn generate_dual_nback_sequences(
     n: usize,
     length: usize,
-) -> (Vec<char>, Vec<u8>) {
+    auditory_stimulus_set: AuditoryStimulusSet,
+) -> (Vec<String>, Vec<u8>) {
     if n >= length {
         panic!("N-value must be less than the sequence length.");
     }
 
-    const AUDITORY_STIMULI: &[char] = &[
-        'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'
+    const ALL_LETTERS: &[&str] = &[
+        "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R",
+        "S", "T", "U", "V", "W", "X", "Y", "Z",
     ];
+    const NON_CONFUSING_LETTERS: &[&str] = &["A", "K", "Q", "R", "U", "W", "H", "L", "O"];
+    const TIAN_GAN_DI_ZHI: &[&str] = &[
+        "jia", "yi", "bing", "ding", "wu", "ji", "geng", "xin", "ren", "gui", "zi", "chou",
+        "yin", "mao", "chen", "si", "wu_branch", "wei", "shen", "you", "xu", "hai",
+    ];
+
+    let auditory_stimuli: &[&str] = match auditory_stimulus_set {
+        AuditoryStimulusSet::AllLetters => ALL_LETTERS,
+        AuditoryStimulusSet::NonConfusingLetters => NON_CONFUSING_LETTERS,
+        AuditoryStimulusSet::TianGanDiZhi => TIAN_GAN_DI_ZHI,
+    };
+
     let visual_stimuli: Vec<u8> = (0..9).collect(); // Always 3x3 grid
 
     // 1. Generate audio sequence
-    let audio_sequence =
-        generate_single_nback_sequence(n, length, AUDITORY_STIMULI, &HashSet::new());
+    let audio_sequence_raw =
+        generate_single_nback_sequence(n, length, auditory_stimuli, &HashSet::new());
+    let audio_sequence: Vec<String> = audio_sequence_raw.iter().map(|s| s.to_string()).collect();
+
 
     // 2. Find audio match indices
     let audio_match_indices: HashSet<usize> = (n..length)
@@ -132,7 +156,8 @@ mod tests {
     fn test_dual_sequence_generation() {
         let n = 3;
         let length = 100;
-        let (audio_seq, visual_seq) = generate_dual_nback_sequences(n, length);
+        let (audio_seq, visual_seq) =
+            generate_dual_nback_sequences(n, length, AuditoryStimulusSet::AllLetters);
 
         assert_eq!(audio_seq.len(), length);
         assert_eq!(visual_seq.len(), length);

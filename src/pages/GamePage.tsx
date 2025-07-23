@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Pause, Play, X } from 'lucide-react';
 import { invoke } from '@tauri-apps/api/core';
 import { confirm } from '@tauri-apps/plugin-dialog';
-import { useSettings } from '../contexts/SettingsContext';
+import { useSettings, AuditoryStimulusSet } from '../contexts/SettingsContext';
 import { useGameStatus } from '../contexts/GameStatusContext';
 import { usePause } from '../contexts/PauseContext';
 import { BrainCircuit, Timer} from 'lucide-react';
@@ -19,16 +19,12 @@ import { GameSessionSummary, calculateAccuracy } from '../utils/stats'; // Impor
 import './GamePage.css';
 
 // --- Data Structures mirroring Rust backend ---
+import { UserSettings } from '../contexts/SettingsContext';
+
+// --- Data Structures mirroring Rust backend ---
 interface FrontendStimulus {
   visual_stimulus: { position: number };
   audio_stimulus: { letter: string };
-}
-
-interface UserSettings {
-  n_level: number;
-  speed_ms: number;
-  session_length: number;
-  grid_size: number;
 }
 
 interface GameState {
@@ -112,8 +108,10 @@ const GamePage: React.FC = () => {
     if (gameState?.isRunning && !isPaused) {
       const letter = gameState.currentStimulus?.audio_stimulus.letter;
       if (letter) {
-        const soundName = `letter_${letter}.mp3`;
-        const audioSrc = `/sounds/${soundName}`;
+        const isTianGanDiZhi = contextSettings.auditory_stimulus_set === AuditoryStimulusSet.TianGanDiZhi;
+        const audioSrc = isTianGanDiZhi
+          ? `/sounds/tiangandizhi/${letter}.mp3`
+          : `/sounds/letter_${letter}.mp3`;
 
         let audio = audioCache.current[audioSrc];
         if (!audio) {

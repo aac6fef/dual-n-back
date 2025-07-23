@@ -5,11 +5,18 @@ import { locale } from '@tauri-apps/plugin-os';
 import { useLocalStorage } from '../hooks/useLocalStorage';
 import { useTranslation } from 'react-i18next';
 
+export enum AuditoryStimulusSet {
+  AllLetters = 'AllLetters',
+  NonConfusingLetters = 'NonConfusingLetters',
+  TianGanDiZhi = 'TianGanDiZhi',
+}
+
 // Interface for settings stored in the backend
 export interface UserSettings {
   n_level: number;
   speed_ms: number;
   session_length: number;
+  auditory_stimulus_set: AuditoryStimulusSet;
 }
 
 // Interface for all settings, including client-side ones
@@ -32,6 +39,7 @@ const defaultSettings: AppSettings = {
   n_level: 2,
   speed_ms: 2000,
   session_length: 30,
+  auditory_stimulus_set: AuditoryStimulusSet.AllLetters,
   theme: 'dark',
   language: 'en',
   followSystemLanguage: true,
@@ -209,6 +217,7 @@ export const SettingsProvider: React.FC<{ children: ReactNode }> = ({ children }
       n_level: settings.n_level,
       speed_ms: settings.speed_ms,
       session_length: settings.session_length,
+      auditory_stimulus_set: settings.auditory_stimulus_set,
     };
     await invoke('save_user_settings', { settings: backendSettings });
     

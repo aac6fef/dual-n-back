@@ -6,6 +6,7 @@ import {
   BrainCircuit,
   Clock,
   ListChecks,
+  FileAudio,
   Target,
   Ear,
   HelpCircle,
@@ -18,12 +19,49 @@ import {
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import ColorGridLegend from '../components/ColorGridLegend';
-import { GameSessionDetails, GameEvent, getCalculatedStats } from '../utils/stats';
-import { useSettings } from '../contexts/SettingsContext';
+import { getCalculatedStats } from '../utils/stats';
+import { useSettings, AuditoryStimulusSet, UserSettings as AppUserSettings } from '../contexts/SettingsContext';
 import { useNavigate } from 'react-router-dom';
 import './HistoryDetailPage.css';
 
-const renderEvent = (event: GameEvent) => {
+// Local type definitions to override any caching issues
+interface AccuracyStats {
+  true_positives: number;
+  true_negatives: number;
+  false_positives: number;
+  false_negatives: number;
+}
+
+interface GameEvent {
+  turn_index: number;
+  stimulus: {
+    visual: number;
+    audio: string;
+  };
+  is_visual_match: boolean;
+  is_audio_match: boolean;
+  user_response: {
+    visual_match: boolean;
+    audio_match: boolean;
+  };
+}
+
+interface GameSessionDetails {
+  id: string;
+  timestamp: string;
+  settings: AppUserSettings;
+  visual_stats: AccuracyStats;
+  audio_stats: AccuracyStats;
+  event_history: GameEvent[];
+}
+
+
+const tianGanDiZhiMap: Record<string, string> = {
+  jia: '甲', yi: '乙', bing: '丙', ding: '丁', wu: '戊', ji: '己', geng: '庚', xin: '辛', ren: '壬', gui: '癸',
+  zi: '子', chou: '丑', yin: '寅', mao: '卯', chen: '辰', si: '巳', wu_branch: '午', wei: '未', shen: '申', you: '酉', xu: '戌', hai: '亥',
+};
+
+const renderEvent = (event: GameEvent, stimulusSet: AuditoryStimulusSet) => {
   const visualMatchClass = event.is_visual_match ? 'match' : '';
   const audioMatchClass = event.is_audio_match ? 'match' : '';
   const visualUserClickClass = event.user_response.visual_match ? 'user-click-visual' : '';
@@ -38,7 +76,9 @@ const renderEvent = (event: GameEvent) => {
         </div>
       </div>
       <div className={`event-stimulus audio-stimulus ${audioMatchClass} ${audioUserClickClass}`}>
-        {event.stimulus.audio}
+        {stimulusSet === AuditoryStimulusSet.TianGanDiZhi
+          ? tianGanDiZhiMap[event.stimulus.audio.toLowerCase()] || event.stimulus.audio
+          : event.stimulus.audio}
       </div>
     </div>
   );
@@ -109,6 +149,7 @@ const HistoryDetailPage: React.FC = () => {
       n_level: session.settings.n_level,
       speed_ms: session.settings.speed_ms,
       session_length: session.settings.session_length,
+      auditory_stimulus_set: session.settings.auditory_stimulus_set,
     });
     // Persist the settings
     await saveSettings();
@@ -149,6 +190,13 @@ const HistoryDetailPage: React.FC = () => {
         <div className="summary-item"><BrainCircuit size={18} /><strong>{t('history.nLevel')}:</strong> {session.settings.n_level}</div>
         <div className="summary-item"><Clock size={18} /><strong>{t('history.speed')}:</strong> {session.settings.speed_ms}ms</div>
         <div className="summary-item"><ListChecks size={18} /><strong>{t('history.sessionLength')}:</strong> {session.settings.session_length}</div>
+        <div className="summary-item">
+          <FileAudio size={18} />
+          <strong>{t('settings.coreTraining.auditoryStimulusSet')}:</strong>
+          &nbsp;{t(`settings.coreTraining.auditoryStimulusSets.${session.settings.auditory_stimulus_set.toLowerCase()}` as any, {
+            defaultValue: session.settings.auditory_stimulus_set
+          })}
+        </div>
       </Card>
 
       <Card className="stats-card">
@@ -196,7 +244,7 @@ const HistoryDetailPage: React.FC = () => {
           <div><Ear size={18} /> {t('history.audio')}</div>
         </div>
         <div className="sequence-grid">
-          {session.event_history.map(renderEvent)}
+          {session.event_history.map((event) => renderEvent(event, session.settings.auditory_stimulus_set))}
         </div>
       </Card>
     </div>

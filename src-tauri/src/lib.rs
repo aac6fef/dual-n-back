@@ -2,6 +2,7 @@ mod game;
 mod persistence;
 pub mod sequence_generator;
 
+use crate::sequence_generator::AuditoryStimulusSet;
 use chrono::Duration;
 use game::{AppState, GameState, Stimulus, UserResponse};
 use persistence::{
@@ -29,7 +30,7 @@ struct VisualStimulus {
 
 #[derive(Serialize, Clone)]
 struct AudioStimulus {
-    letter: char,
+    letter: String,
 }
 
 impl From<&Stimulus> for FrontendStimulus {
@@ -39,7 +40,7 @@ impl From<&Stimulus> for FrontendStimulus {
                 position: stimulus.visual,
             },
             audio_stimulus: AudioStimulus {
-                letter: stimulus.audio,
+                letter: stimulus.audio.clone(),
             },
         }
     }
@@ -150,11 +151,18 @@ async fn generate_fake_history(db_state: State<'_, DbState>) -> Result<(), Strin
     let db = db_state.0.lock().unwrap().clone();
     tauri::async_runtime::spawn(async move {
         let mut rng = thread_rng();
+        let stimulus_sets = [
+            AuditoryStimulusSet::AllLetters,
+            AuditoryStimulusSet::NonConfusingLetters,
+            AuditoryStimulusSet::TianGanDiZhi,
+        ];
+
         for i in 0..15 {
             let settings = UserSettings {
                 n_level: rng.gen_range(2..=4),
                 speed_ms: rng.gen_range(2000..=3000),
                 session_length: rng.gen_range(20..=30),
+                auditory_stimulus_set: *stimulus_sets.choose(&mut rng).unwrap(),
             };
 
             // Create a temporary game state to generate a valid session

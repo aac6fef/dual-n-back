@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use sled::Db;
 use std::sync::Mutex;
 use crate::game::{AccuracyStats, GameEvent};
+use crate::sequence_generator::AuditoryStimulusSet;
 use chrono::{DateTime, Utc};
 
 // --- User Settings ---
@@ -11,7 +12,7 @@ pub struct UserSettings {
     pub n_level: usize,
     pub speed_ms: u64,
     pub session_length: usize,
-    // In the future, we can add stimulus_types: enum { Visual, Audio, Dual }
+    pub auditory_stimulus_set: AuditoryStimulusSet,
 }
 
 impl Default for UserSettings {
@@ -20,6 +21,7 @@ impl Default for UserSettings {
             n_level: 2,
             speed_ms: 2000,
             session_length: 20,
+            auditory_stimulus_set: AuditoryStimulusSet::AllLetters,
         }
     }
 }
@@ -163,17 +165,21 @@ mod tests {
         // Test loading default settings
         let loaded_settings = load_settings(&db).unwrap();
         assert_eq!(loaded_settings.n_level, 2);
+        assert_eq!(loaded_settings.auditory_stimulus_set, AuditoryStimulusSet::AllLetters);
+
 
         // Test saving and loading custom settings
         let custom_settings = UserSettings {
             n_level: 3,
             speed_ms: 1500,
             session_length: 25,
+            auditory_stimulus_set: AuditoryStimulusSet::NonConfusingLetters,
         };
         save_settings(&db, &custom_settings).unwrap();
         let loaded_settings = load_settings(&db).unwrap();
         assert_eq!(loaded_settings.n_level, 3);
         assert_eq!(loaded_settings.session_length, 25);
+        assert_eq!(loaded_settings.auditory_stimulus_set, AuditoryStimulusSet::NonConfusingLetters);
     }
 
     #[test]
@@ -188,7 +194,7 @@ mod tests {
         let settings = UserSettings::default();
         let event_history1 = vec![GameEvent {
             turn_index: 0,
-            stimulus: Stimulus { visual: 1, audio: 'A' },
+            stimulus: Stimulus { visual: 1, audio: "A".to_string() },
             is_visual_match: false,
             is_audio_match: false,
             user_response: UserResponse::default(),
